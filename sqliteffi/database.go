@@ -52,6 +52,8 @@ type databaseAPI struct {
  lastInsertRowID func(unsafe.Pointer) int64
  changes func(unsafe.Pointer) int32
  busyTimeout func(unsafe.Pointer, int32) int32
+ reset func(unsafe.Pointer) int32
+ clearBindings func(unsafe.Pointer) int32
 }
 
 // DB is a serialized SQLite connection. Open creates the database if absent.
