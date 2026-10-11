@@ -37,7 +37,7 @@ func registerLibVersion(l *Library, handle uintptr) error {
 
 	purego.RegisterFunc(&l.version, versionSymbol)
 	purego.RegisterFunc(&l.versionNumber, versionNumberSymbol)
-	return nil
+	return registerDatabaseAPI(l, func(name string) (uintptr, error) { return purego.Dlsym(handle, name) })
 }
 
 func cString(ptr uintptr) string {

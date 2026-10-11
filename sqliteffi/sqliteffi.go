@@ -21,7 +21,7 @@ var ErrClosed = errors.New("sqliteffi: library is closed")
 func LibraryName() []string {
 	switch runtime.GOOS {
 	case "windows":
-		return []string{"sqlite3.dll", "winsqlite3.dll"}
+		return []string{"sqlite3.dll"}
 	case "darwin":
 		return []string{"libsqlite3.dylib", "/usr/lib/libsqlite3.dylib"}
 	default:
@@ -38,6 +38,8 @@ type Library struct {
 	handle        uintptr
 	version       func() uintptr
 	versionNumber func() int32
+	api           databaseAPI
+	openDatabases int
 	closed        bool
 }
 
@@ -121,6 +123,9 @@ func (l *Library) Close() error {
 	defer l.mu.Unlock()
 	if l.closed {
 		return nil
+	}
+	if l.openDatabases > 0 {
+		return ErrDatabaseOpen
 	}
 	l.closed = true
 	l.version = nil
