@@ -33,7 +33,8 @@ jobs:
           tar -xzf /tmp/sqlite-autoconf-3530400.tar.gz -C /tmp
           cd /tmp/sqlite-autoconf-3530400
           # Keep optional symbols used by SQLite's shell and common extensions available in the shared library.
-          CFLAGS='-DSQLITE_ENABLE_SESSION -DSQLITE_ENABLE_PREUPDATE_HOOK' \
+          # The sqlite3 shell also references column-metadata APIs when dynamically linked.
+          CFLAGS='-DSQLITE_ENABLE_SESSION -DSQLITE_ENABLE_PREUPDATE_HOOK -DSQLITE_ENABLE_COLUMN_METADATA' \
             ./configure --prefix=/opt/sqlite-3.53.4 --enable-shared --disable-static
           make -j2
           sudo make install
