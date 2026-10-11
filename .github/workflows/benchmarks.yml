@@ -45,7 +45,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          version="$(LD_LIBRARY_PATH=/opt/sqlite-3.53.4/lib sqlite3 :memory: 'SELECT sqlite_version();')"
+          version="$(LD_LIBRARY_PATH=/opt/sqlite-3.53.4/lib /opt/sqlite-3.53.4/bin/sqlite3 :memory: 'SELECT sqlite_version();')"
           echo "Native SQLite runtime: $version"
           test "$version" = "3.53.4"
       - name: Record environment
@@ -54,7 +54,7 @@ jobs:
           go env GOOS GOARCH CGO_ENABLED
           uname -a
           lscpu
-          LD_LIBRARY_PATH=/opt/sqlite-3.53.4/lib sqlite3 --version
+          LD_LIBRARY_PATH=/opt/sqlite-3.53.4/lib /opt/sqlite-3.53.4/bin/sqlite3 --version
       - name: Resolve benchmark dependencies
         working-directory: benchmarks
         run: go mod tidy
