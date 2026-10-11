@@ -1,6 +1,6 @@
 // Package sqliteffi provides a small experimental CGO-free binding to the
-// SQLite C library. The initial API deliberately exposes only a version
-// diagnostic; database operations are not yet implemented.
+// SQLite C library. The initial API exposes version diagnostics; database
+// operations are not yet implemented.
 package sqliteffi
 
 import (
@@ -33,17 +33,18 @@ func LibraryName() []string {
 // Library represents a loaded SQLite shared library. It does not represent a
 // database connection. Close prevents further calls through this wrapper and
 // releases the dynamic-library handle according to the operating system.
-// Callers must not race Close with Version; the type serializes both operations.
+// Calls through this wrapper are serialized with Close.
 type Library struct {
-	mu      sync.Mutex
-	handle  uintptr
-	version func() uintptr
-	closed  bool
+	mu            sync.Mutex
+	handle        uintptr
+	version       func() uintptr
+	versionNumber func() int32
+	closed        bool
 }
 
-// Load opens an explicit native library path and resolves sqlite3_libversion.
-// The caller should pass a trusted, absolute path when the environment may be
-// influenced by untrusted users.
+// Load opens an explicit native library path and resolves SQLite version
+// diagnostics. The caller should pass a trusted, absolute path when the
+// environment may be influenced by untrusted users.
 func Load(path string) (*Library, error) {
 	if strings.TrimSpace(path) == "" {
 		return nil, errors.New("sqliteffi: library path must not be empty")
@@ -74,13 +75,13 @@ func loadLibrary(path string) (*Library, error) {
 	lib := &Library{handle: handle}
 	if err := registerLibVersion(lib, handle); err != nil {
 		_ = closeLibrary(handle)
-		return nil, fmt.Errorf("sqliteffi: resolve sqlite3_libversion in %q: %w", path, err)
+		return nil, fmt.Errorf("sqliteffi: resolve SQLite version diagnostics in %q: %w", path, err)
 	}
 	return lib, nil
 }
 
-// Version returns the runtime SQLite version string. It is safe to call from
-// multiple goroutines and returns ErrClosed after Close.
+// Version returns the runtime SQLite version string, such as "3.45.1".
+// It is safe to call from multiple goroutines and returns ErrClosed after Close.
 func (l *Library) Version() (string, error) {
 	if l == nil {
 		return "", ErrClosed
@@ -97,6 +98,21 @@ func (l *Library) Version() (string, error) {
 	return cString(ptr), nil
 }
 
+// VersionNumber returns SQLite's numeric version, such as 3045001 for 3.45.1.
+// The number follows SQLite's sqlite3_libversion_number convention:
+// major*1000000 + minor*1000 + patch. It returns ErrClosed after Close.
+func (l *Library) VersionNumber() (int, error) {
+	if l == nil {
+		return 0, ErrClosed
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if l.closed || l.versionNumber == nil {
+		return 0, ErrClosed
+	}
+	return int(l.versionNumber()), nil
+}
+
 // Close releases the native-library handle. It is idempotent.
 func (l *Library) Close() error {
 	if l == nil {
@@ -109,6 +125,7 @@ func (l *Library) Close() error {
 	}
 	l.closed = true
 	l.version = nil
+	l.versionNumber = nil
 	if l.handle == 0 {
 		return nil
 	}
