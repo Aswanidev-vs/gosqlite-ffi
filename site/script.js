@@ -24,4 +24,8 @@
   const exampleButton = document.getElementById("copy-example");
   const example = document.querySelector(".code-card code")?.innerText || "";
   exampleButton?.addEventListener("click", () => copy(example, exampleButton, "Copy code"));
+  document.querySelectorAll(".copy-code").forEach((button) => {
+    const code = button.closest(".code-card")?.querySelector("pre code")?.innerText || "";
+    button.addEventListener("click", () => copy(code, button, "Copy code"));
+  });
 })(); 
