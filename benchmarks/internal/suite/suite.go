@@ -15,6 +15,12 @@ type OpenFunc func(string) (*sql.DB, error)
 // Each top-level benchmark creates its own database to keep setup out of timing.
 func Benchmarks(b *testing.B, open OpenFunc) {
 	b.Helper()
+	versionDB, err := open(":memory:")
+	if err != nil { b.Fatal(err) }
+	var sqliteVersion string
+	if err := versionDB.QueryRow("SELECT sqlite_version()").Scan(&sqliteVersion); err != nil { b.Fatal(err) }
+	if err := versionDB.Close(); err != nil { b.Fatal(err) }
+	b.Logf("SQLite version: %s", sqliteVersion)
 	b.Run("OpenClose", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			db, err := open(":memory:")
