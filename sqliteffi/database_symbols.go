@@ -1,28 +1,53 @@
 package sqliteffi
 
 import (
- "fmt"
+	"fmt"
 
- "github.com/ebitengine/purego"
+	"github.com/ebitengine/purego"
 )
 
-func registerDatabaseAPI(l *Library, lookup func(string) (uintptr,error)) error {
- var a databaseAPI
- symbols := []struct{name string; target any}{
-  {"sqlite3_open_v2",&a.openV2},{"sqlite3_close_v2",&a.closeV2},{"sqlite3_errmsg",&a.errmsg},
-  {"sqlite3_prepare_v2",&a.prepareV2},{"sqlite3_step",&a.step},{"sqlite3_finalize",&a.finalize},
-  {"sqlite3_bind_null",&a.bindNull},{"sqlite3_bind_int64",&a.bindInt64},{"sqlite3_bind_double",&a.bindDouble},
-  {"sqlite3_bind_text",&a.bindText},{"sqlite3_bind_blob",&a.bindBlob},
-  {"sqlite3_column_count",&a.columnCount},{"sqlite3_column_name",&a.columnName},{"sqlite3_column_type",&a.columnType},
-  {"sqlite3_column_int64",&a.columnInt64},{"sqlite3_column_double",&a.columnDouble},{"sqlite3_column_text",&a.columnText},
-  {"sqlite3_column_blob",&a.columnBlob},{"sqlite3_column_bytes",&a.columnBytes},
-  {"sqlite3_last_insert_rowid",&a.lastInsertRowID},{"sqlite3_changes",&a.changes},{"sqlite3_busy_timeout",&a.busyTimeout},
- }
- for _,s:=range symbols {
-  address,err:=lookup(s.name); if err!=nil || address==0 { if err==nil { err=fmt.Errorf("symbol address is zero") }; return fmt.Errorf("sqliteffi: resolve %s: %w",s.name,err) }
-  purego.RegisterFunc(s.target,address)
- }
- // Keep the typed function table alive as part of Library.
- l.api = a
- return nil
+// registerDatabaseAPI resolves and registers each SQLite entry point directly
+// into the Library-owned function table. RegisterFunc installs Go closures in
+// the supplied function variables; registering into the final table avoids
+// registering closures against a temporary table and then copying it.
+func registerDatabaseAPI(l *Library, lookup func(string) (uintptr, error)) error {
+	symbols := []struct {
+		name   string
+		target any
+	}{
+		{"sqlite3_open_v2", &l.api.openV2},
+		{"sqlite3_close_v2", &l.api.closeV2},
+		{"sqlite3_errmsg", &l.api.errmsg},
+		{"sqlite3_prepare_v2", &l.api.prepareV2},
+		{"sqlite3_step", &l.api.step},
+		{"sqlite3_finalize", &l.api.finalize},
+		{"sqlite3_bind_null", &l.api.bindNull},
+		{"sqlite3_bind_int64", &l.api.bindInt64},
+		{"sqlite3_bind_double", &l.api.bindDouble},
+		{"sqlite3_bind_text", &l.api.bindText},
+		{"sqlite3_bind_blob", &l.api.bindBlob},
+		{"sqlite3_column_count", &l.api.columnCount},
+		{"sqlite3_column_name", &l.api.columnName},
+		{"sqlite3_column_type", &l.api.columnType},
+		{"sqlite3_column_int64", &l.api.columnInt64},
+		{"sqlite3_column_double", &l.api.columnDouble},
+		{"sqlite3_column_text", &l.api.columnText},
+		{"sqlite3_column_blob", &l.api.columnBlob},
+		{"sqlite3_column_bytes", &l.api.columnBytes},
+		{"sqlite3_last_insert_rowid", &l.api.lastInsertRowID},
+		{"sqlite3_changes", &l.api.changes},
+		{"sqlite3_busy_timeout", &l.api.busyTimeout},
+	}
+
+	for _, symbol := range symbols {
+		address, err := lookup(symbol.name)
+		if err != nil {
+			return fmt.Errorf("sqliteffi: resolve %s: %w", symbol.name, err)
+		}
+		if address == 0 {
+			return fmt.Errorf("sqliteffi: resolve %s: symbol address is zero", symbol.name)
+		}
+		purego.RegisterFunc(symbol.target, address)
+	}
+	return nil
 }
