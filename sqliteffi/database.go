@@ -60,6 +60,7 @@ type DB struct {
  lib *Library
  handle unsafe.Pointer
  activeRows int
+ ownsLibrary bool
  closed bool
 }
 
@@ -69,6 +70,7 @@ func Open(path string) (*DB, error) {
  if err != nil { return nil, err }
  db, err := lib.Open(path)
  if err != nil { _ = lib.Close(); return nil, err }
+ db.ownsLibrary = true
  return db, nil
 }
 
@@ -176,5 +178,6 @@ func (db *DB) Close() error {
  rc:=db.lib.api.closeV2(db.handle); if rc!=sqliteOK { return db.error(rc) }
  db.handle=nil; db.closed=true
  db.lib.mu.Lock(); db.lib.openDatabases--; db.lib.mu.Unlock()
+ if db.ownsLibrary { return db.lib.Close() }
  return nil
 }
