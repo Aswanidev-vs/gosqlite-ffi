@@ -21,7 +21,7 @@ var ErrClosed = errors.New("sqliteffi: library is closed")
 func LibraryName() []string {
 	switch runtime.GOOS {
 	case "windows":
-		return []string{"sqlite3.dll", "winsqlite3.dll"}
+		return []string{"sqlite3.dll"}
 	case "darwin":
 		return []string{"libsqlite3.dylib", "/usr/lib/libsqlite3.dylib"}
 	default:
