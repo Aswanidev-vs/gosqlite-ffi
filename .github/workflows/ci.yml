@@ -24,8 +24,8 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
           cache: true
-      - name: Download modules
-        run: go mod download
+      - name: Resolve modules and checksums
+        run: go mod tidy
       - name: Test
         run: go test ./...
       - name: Vet
