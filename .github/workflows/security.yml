@@ -21,8 +21,8 @@ jobs:
         with:
           go-version: '1.25.x'
           cache: true
-      - name: Download modules
-        run: go mod download
+      - name: Resolve modules and checksums
+        run: go mod tidy
       - name: Check Go vulnerabilities
         uses: golang/govulncheck-action@v1
         with:
