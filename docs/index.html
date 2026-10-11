@@ -27,7 +27,7 @@
         <a class="button secondary" href="https://github.com/Aswanidev-vs/gosqlite-ffi">View source ↗</a>
       </div>
       <div class="terminal" aria-label="Example command"><div class="terminal-head"><span></span><span></span><span></span><label>terminal</label><button id="copy-command" type="button">Copy</button></div><pre><span class="prompt">$</span> go get github.com/Aswanidev-vs/gosqlite-ffi</pre></div>
-      <p class="hero-note">Current milestone: load the library and read <code>sqlite3_libversion()</code>. SQL operations are not implemented yet.</p>
+      <p class="hero-note">Current milestone: open databases, execute parameterized SQL, and query typed rows. Transactions and database/sql integration remain planned.</p>
     </section>
     <section class="metrics" aria-label="Project facts">
       <div><span class="metric-label">LANGUAGE</span><strong>Go 1.22+</strong></div>
@@ -131,8 +131,8 @@ go run .</code></pre></div>
       <p class="inline-note"><strong>Important:</strong> The native SQLite shared library must be installed and discoverable when using <code>LoadDefault</code>. This package currently exposes <code>Version</code>, <code>VersionNumber</code>, <code>Load</code>, and <code>Close</code>; it does not yet support SQL queries, prepared statements, or transactions.</p>
     </section>
     <section id="roadmap" class="section roadmap">
-      <div class="section-kicker">WHAT'S NEXT</div><h2>A prototype, not a production driver.</h2>
-      <p class="section-intro">The project will grow through tested API layers, not promises. Database operations are still on the roadmap.</p>
+      <div class="section-kicker">WHAT'S NEXT</div><h2>An early database API, still under development.</h2>
+      <p class="section-intro">The core open/execute/query path is implemented. Transactions and database/sql integration remain on the roadmap.</p>
       <ul class="roadmap-list">
         <li class="done"><span>✓</span><div><strong>Native library loading</strong><small>Resolve and call sqlite3_libversion()</small></div><em>Done</em></li>
         <li><span>02</span><div><strong>Database open and close</strong><small>Own native handles and surface SQLite errors</small></div><em>Planned</em></li>
