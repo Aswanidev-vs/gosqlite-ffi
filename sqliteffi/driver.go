@@ -24,7 +24,9 @@ type driverConn struct { db *DB; closed bool }
 
 func (c *driverConn) Prepare(query string) (driver.Stmt, error) {
 	if c.closed { return nil, ErrDBClosed }
-	return c.db.Prepare(query)
+	stmt, err := c.db.Prepare(query)
+	if err != nil { return nil, err }
+	return &driverStmt{stmt: stmt}, nil
 }
 func (c *driverConn) Close() error {
 	if c.closed { return nil }
