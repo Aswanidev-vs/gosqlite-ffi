@@ -3,7 +3,6 @@ package sqliteffi
 import (
 	"errors"
 	"fmt"
-	"unsafe"
 )
 
 // ErrStatementBusy indicates that a statement still has an open result set.
@@ -102,4 +101,3 @@ func (s *Stmt) Query(args ...any) (*Rows, error) {
 	return rows, nil
 }
 
-var _ = unsafe.Pointer(nil)
