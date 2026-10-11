@@ -4,7 +4,7 @@
 
 [Project website](https://aswanidev-vs.github.io/gosqlite-ffi/) · [Getting Started](docs/getting-started.md) · [Architecture](docs/architecture.md) · [Security Policy](SECURITY.md)
 
-> **Status: experimental scaffold.** The current milestone loads a native SQLite shared library and reads `sqlite3_libversion()`. Database connections, SQL execution, prepared statements, transactions, and `database/sql` integration are not implemented. Do not use this prototype for production data.
+> **Status: experimental scaffold.** The current milestone loads a native SQLite shared library and exposes `sqlite3_libversion()` and `sqlite3_libversion_number()` diagnostics. Database connections, SQL execution, prepared statements, transactions, and `database/sql` integration are not implemented. Do not use this prototype for production data.
 
 ## Why GoFFI SQLite?
 
@@ -46,9 +46,16 @@ func main() {
     if err != nil {
         log.Fatal(err)
     }
-    fmt.Println("SQLite", version)
+    versionNumber, err := lib.VersionNumber()
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    fmt.Printf("SQLite %s (numeric version %d)\n", version, versionNumber)
 }
 ```
+
+`VersionNumber` follows SQLite's numeric convention: `major*1000000 + minor*1000 + patch`. It can be useful for deterministic version comparisons without parsing a string.
 
 For deterministic deployments, use `sqliteffi.Load` with a trusted absolute library path. See [Getting Started](docs/getting-started.md) for platform notes.
 
@@ -66,7 +73,7 @@ The initial implementation uses the `github.com/ebitengine/purego` dependency. N
 
 - [x] Initial scaffold and docs
 - [x] CGO-free shared library loading through purego
-- [x] `sqlite3_libversion()` diagnostic
+- [x] `sqlite3_libversion()` and `sqlite3_libversion_number()` diagnostics
 - [x] Website, CI workflows, security policy and Dependabot
 - [ ] Database open/close handle APIs
 - [ ] Prepared statements and bound parameters
