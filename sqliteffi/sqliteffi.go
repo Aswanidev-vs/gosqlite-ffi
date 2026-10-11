@@ -38,6 +38,8 @@ type Library struct {
 	handle        uintptr
 	version       func() uintptr
 	versionNumber func() int32
+	api           databaseAPI
+	openDatabases int
 	closed        bool
 }
 
@@ -121,6 +123,9 @@ func (l *Library) Close() error {
 	defer l.mu.Unlock()
 	if l.closed {
 		return nil
+	}
+	if l.openDatabases > 0 {
+		return ErrDatabaseOpen
 	}
 	l.closed = true
 	l.version = nil
