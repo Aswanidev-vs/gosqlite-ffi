@@ -117,25 +117,52 @@ Results depend on the SQLite build, OS, storage, Go version, and workload. These
 ```sh
 gofmt -w sqliteffi/*.go
 go test ./...
-go vet ./...
+go test -race ./...
+go test ./sqliteffi -run TestResourceLifecycleStress -count=10
+go vet -unsafeptr=false ./...
 ```
 
 The initial implementation uses the `github.com/ebitengine/purego` dependency. Network access is needed when fetching modules for the first time. See [Development Guide](docs/development.md).
 
 ## Roadmap
 
-- [x] Initial scaffold and docs
-- [x] CGO-free shared library loading through purego
-- [x] `sqlite3_libversion()` and `sqlite3_libversion_number()` diagnostics
-- [x] Website, CI workflows, security policy and Dependabot
-- [x] Database open/close handle APIs
-- [x] Prepared statements and bound parameters
-- [x] Row iteration and typed values
-- [x] Explicit transactions with commit and rollback
-- [x] Experimental `database/sql/driver` integration
-- [ ] Context cancellation/interruption and broader busy handling
-- [ ] Broader verified OS/architecture matrix and release artifacts
+- [x] Initial scaffold, documentation, and CI
+- [x] CGO-free native library loading and version diagnostics
+- [x] Database open/close, parameterized execution, and typed row iteration
+- [x] Reusable prepared statements
+- [x] Explicit transactions
+- [x] Experimental `database/sql` driver
+- [ ] Context cancellation, deadlines, and SQLite interruption
+- [ ] Concurrency/transaction ownership guarantees and race-tested semantics
+- [ ] Resource and native-memory leak verification
+- [ ] Extended SQLite errors and value-binding edge cases
+- [ ] Backup/restore and operational configuration APIs
+- [ ] Fuzzing, robust failure-path tests, and performance baselines
+- [ ] Verified OS/architecture matrix and versioned release artifacts
 
+## Future implementation plan
+
+The following items are planned; they are not promises of current support. Prioritize correctness and lifecycle safety before adding more surface area.
+
+1. **Context cancellation and interruption** — context-aware driver calls, query deadlines, safe `sqlite3_interrupt` behavior, and tests for cancellation while a query is running.
+2. **Concurrency and transaction safety** — define connection ownership rules, serialize transaction use, and validate behavior with the Go race detector.
+3. **Resource and memory-leak verification** — package-wide goroutine leak detection with `goleak`, repeated open/prepare/query/close stress tests, native handle accounting, and ASan/Valgrind runs against an instrumented SQLite build. `goleak` detects goroutine leaks, not native heap leaks.
+4. **Error and value correctness** — extended SQLite result codes, consistent error types, and more tests for NULL, empty text/blob, integer boundaries, and invalid bindings.
+5. **SQLite backup and operational features** — online backup/restore, explicit journal/WAL configuration, and clearer busy-timeout behavior.
+6. **Fuzzing and resilience** — fuzz parameter conversion, row scanning, malformed SQL handling, and repeated failure/cleanup paths.
+7. **Benchmarks and compatibility** — reproducible workloads against other drivers, memory/allocation profiles, and documented trade-offs.
+8. **Platform matrix and releases** — verify supported OS/architecture combinations and native SQLite distributions, publish versioned releases, and maintain compatibility notes.
+
+### Test and leak checks
+
+```sh
+go test ./...
+go test -race ./...
+go test ./sqliteffi -run TestResourceLifecycleStress -count=10
+go test ./sqliteffi -run '^$' -bench . -benchmem
+```
+
+The automated suite uses `testify` assertions and `goleak` to detect goroutines left behind by tests. Stress tests check that GoFFI-owned database/row handles are released. These checks do **not** prove that a native SQLite build has no heap leaks; definitive native-allocation checks require an instrumented SQLite library and tools such as AddressSanitizer or Valgrind on a compatible platform.
 ## Security
 
 Please read [SECURITY.md](SECURITY.md). Never load a native library from an untrusted path. Use parameter binding for values. This driver is experimental; validate the target OS/library combination and serialize manual transaction use on a shared `DB` connection.
