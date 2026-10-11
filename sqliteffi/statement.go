@@ -2,6 +2,7 @@ package sqliteffi
 
 import (
 	"errors"
+	"unsafe"
 	"fmt"
 )
 
