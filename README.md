@@ -1,10 +1,10 @@
 # GoFFI SQLite
 
-**An experimental CGO-free Go binding prototype for SQLite's C API using `purego`.**
+**An experimental CGO-free SQLite database library for Go using `purego`.**
 
 [Project website](https://aswanidev-vs.github.io/gosqlite-ffi/) · [Getting Started](docs/getting-started.md) · [Architecture](docs/architecture.md) · [Security Policy](SECURITY.md)
 
-> **Status: experimental scaffold.** The current milestone loads a native SQLite shared library and exposes `sqlite3_libversion()` and `sqlite3_libversion_number()` diagnostics. Database connections, SQL execution, prepared statements, transactions, and `database/sql` integration are not implemented. Do not use this prototype for production data.
+> **Status: experimental early implementation.** The library now opens/creates databases, executes single SQL statements with positional parameters, and queries typed rows. Transactions and `database/sql` integration are not implemented. Review the limitations and run your own tests before using it with important data.
 
 ## Why GoFFI SQLite?
 
@@ -25,6 +25,14 @@
 
 ## Quick start
 
+Install a compatible native SQLite shared library for your OS, then add the Go module:
+
+```sh
+go get github.com/Aswanidev-vs/gosqlite-ffi
+```
+
+Create `main.go`:
+
 ```go
 package main
 
@@ -36,28 +44,41 @@ import (
 )
 
 func main() {
-    lib, err := sqliteffi.LoadDefault()
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer lib.Close()
+    db, err := sqliteffi.Open("app.db")
+    if err != nil { log.Fatal(err) }
+    defer db.Close()
 
-    version, err := lib.Version()
-    if err != nil {
-        log.Fatal(err)
-    }
-    versionNumber, err := lib.VersionNumber()
-    if err != nil {
-        log.Fatal(err)
-    }
+    if _, err := db.Exec("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT NOT NULL)"); err != nil { log.Fatal(err) }
+    result, err := db.Exec("INSERT INTO users(name) VALUES (?)", "Ada")
+    if err != nil { log.Fatal(err) }
+    fmt.Println("inserted ID:", result.LastInsertID)
 
-    fmt.Printf("SQLite %s (numeric version %d)\n", version, versionNumber)
+    rows, err := db.Query("SELECT id, name FROM users WHERE id = ?", result.LastInsertID)
+    if err != nil { log.Fatal(err) }
+    defer rows.Close()
+    for rows.Next() {
+        var id int64
+        var name string
+        if err := rows.Scan(&id, &name); err != nil { log.Fatal(err) }
+        fmt.Println(id, name)
+    }
+    if err := rows.Err(); err != nil { log.Fatal(err) }
 }
 ```
 
-`VersionNumber` follows SQLite's numeric convention: `major*1000000 + minor*1000 + patch`. It can be useful for deterministic version comparisons without parsing a string.
+Run with `go run .`. The database file is created in the current working directory if it does not exist. SQL parameters support null, booleans, integer types, floating-point types, strings, and byte slices. Use placeholders for values rather than interpolating untrusted input into SQL.
 
-For deterministic deployments, use `sqliteffi.Load` with a trusted absolute library path. See [Getting Started](docs/getting-started.md) for platform notes.
+See [examples/basic](examples/basic) for a complete runnable example.
+
+## Benchmarks
+
+Run the insert and single-row query benchmarks against the native SQLite library installed on your machine:
+
+```sh
+go test ./sqliteffi -run '^$' -bench 'Benchmark(ExecInsert|QuerySingleRow)$' -benchmem
+```
+
+Results depend on the SQLite build, OS, storage, Go version, and workload. These microbenchmarks currently measure GoFFI's API only; they are not a comparative performance claim against other drivers. Compare drivers using the same SQLite version, schema, data, transaction policy, and workload before drawing conclusions.
 
 ## Development
 
@@ -75,16 +96,16 @@ The initial implementation uses the `github.com/ebitengine/purego` dependency. N
 - [x] CGO-free shared library loading through purego
 - [x] `sqlite3_libversion()` and `sqlite3_libversion_number()` diagnostics
 - [x] Website, CI workflows, security policy and Dependabot
-- [ ] Database open/close handle APIs
-- [ ] Prepared statements and bound parameters
-- [ ] Row iteration and typed values
+- [x] Database open/close handle APIs
+- [x] Prepared statements and bound parameters
+- [x] Row iteration and typed values
 - [ ] Transactions, interruption and busy handling
 - [ ] `database/sql/driver` integration
 - [ ] Broader verified OS/architecture matrix and release artifacts
 
 ## Security
 
-Please read [SECURITY.md](SECURITY.md). Never load a native library from an untrusted path. SQL execution and parameter binding are not implemented yet.
+Please read [SECURITY.md](SECURITY.md). Never load a native library from an untrusted path. Use parameter binding for values; transactions and database/sql integration are not implemented yet.
 
 ## Contributing
 
