@@ -33,9 +33,7 @@ func Benchmarks(b *testing.B, open OpenFunc) {
 			if err != nil { b.Fatal(err) }
 			var value string
 			if err := db.QueryRow("SELECT value FROM item WHERE id = ?", lastID(res)).Scan(&value); err != nil { b.Fatal(err) }
-			if err := db.QueryRow("DELETE FROM item WHERE id = ?", lastID(res)).Scan(new(any)); err == nil {
-				b.Fatal("DELETE unexpectedly returned a row")
-			}
+			if _, err := db.Exec("DELETE FROM item WHERE id = ?", lastID(res)); err != nil { b.Fatal(err) }
 		}
 	})
 	b.Run("PreparedInsert", func(b *testing.B) {
