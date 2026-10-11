@@ -12,7 +12,7 @@
   <header class="topbar">
     <a class="brand" href="#" aria-label="GoFFI SQLite home"><span class="brand-mark">G</span><span>GoFFI <b>SQLite</b></span></a>
     <nav aria-label="Main navigation">
-      <a href="#features">Overview</a><a href="#quickstart">Quick start</a><a href="#roadmap">Roadmap</a>
+      <a href="#features">Overview</a><a href="#quickstart">Quick start</a><a href="#examples">Examples</a><a href="#roadmap">Roadmap</a>
       <a class="nav-github" href="https://github.com/Aswanidev-vs/gosqlite-ffi">GitHub <span aria-hidden="true">↗</span></a>
       <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">◐</button>
     </nav>
@@ -70,6 +70,65 @@ func main() {
     fmt.Println("SQLite", version)
 }</code></pre></div>
       <p class="inline-note"><strong>Deployment note:</strong> CGO-free does not mean self-contained. For deterministic deployments, use <code>sqliteffi.Load</code> with a trusted absolute library path.</p>
+    </section>
+    <section id="examples" class="section">
+      <div class="section-kicker">PRACTICAL EXAMPLES</div><h2>Use the API that exists today</h2>
+      <p class="section-intro">These examples cover the current diagnostic API only. GoFFI SQLite does not open databases or execute SQL yet.</p>
+      <div class="code-card"><div class="code-card-head"><span>Example 1 · Print version and numeric version</span><button class="copy-code" type="button">Copy code</button></div><pre><code>package main
+
+import (
+    "fmt"
+    "log"
+
+    "github.com/Aswanidev-vs/gosqlite-ffi/sqliteffi"
+)
+
+func main() {
+    lib, err := sqliteffi.LoadDefault()
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer lib.Close()
+
+    version, err := lib.Version()
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    number, err := lib.VersionNumber()
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    fmt.Printf("SQLite version: %s (number %d)\\n", version, number)
+}</code></pre></div>
+      <div class="code-card"><div class="code-card-head"><span>Example 2 · Load a specific library</span><button class="copy-code" type="button">Copy code</button></div><pre><code>package main
+
+import (
+    "fmt"
+    "log"
+
+    "github.com/Aswanidev-vs/gosqlite-ffi/sqliteffi"
+)
+
+func main() {
+    // Use an absolute path to a trusted SQLite shared library.
+    lib, err := sqliteffi.Load("/usr/lib/x86_64-linux-gnu/libsqlite3.so.0")
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer lib.Close()
+
+    version, err := lib.Version()
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Println(version)
+}</code></pre></div>
+      <p class="inline-note"><strong>Platform note:</strong> The explicit path above is an example for some Linux distributions; use the actual absolute path on your system. Windows and macOS use different library names and locations.</p>
+      <div class="code-card"><div class="code-card-head"><span>Example 3 · Install and run</span><button class="copy-code" type="button">Copy code</button></div><pre><code>go get github.com/Aswanidev-vs/gosqlite-ffi
+go run .</code></pre></div>
+      <p class="inline-note"><strong>Important:</strong> The native SQLite shared library must be installed and discoverable when using <code>LoadDefault</code>. This package currently exposes <code>Version</code>, <code>VersionNumber</code>, <code>Load</code>, and <code>Close</code>; it does not yet support SQL queries, prepared statements, or transactions.</p>
     </section>
     <section id="roadmap" class="section roadmap">
       <div class="section-kicker">WHAT'S NEXT</div><h2>A prototype, not a production driver.</h2>
