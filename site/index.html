@@ -132,12 +132,18 @@ go run .</code></pre></div>
     </section>
     <section id="roadmap" class="section roadmap">
       <div class="section-kicker">IMPLEMENTATION STATUS</div><h2>From native calls to Go database APIs.</h2>
-      <p class="section-intro">The initial implementation now covers the database lifecycle, reusable native statements, transactions, and a standard-library SQL driver. This remains experimental and needs validation on every supported platform.</p>
+      <p class="section-intro">The initial API is implemented. The next phase prioritizes correctness under cancellation and concurrency, resource-leak verification, broader SQLite features, and release-quality cross-platform testing.</p>
       <ul class="roadmap-list">
         <li class="done"><span>✓</span><div><strong>Native library loading</strong><small>Resolve SQLite symbols and report runtime version</small></div><em>Done</em></li>
         <li class="done"><span>✓</span><div><strong>Database open and close</strong><small>Own native handles, serialize calls, and surface SQLite errors</small></div><em>Implemented</em></li>
         <li class="done"><span>✓</span><div><strong>Prepared statements</strong><small>Reusable native statements, bound parameters, typed rows</small></div><em>Implemented</em></li>
         <li class="done"><span>✓</span><div><strong>Transactions and driver</strong><small>Commit/rollback plus database/sql integration</small></div><em>Implemented</em></li>
+        <li><span>05</span><div><strong>Cancellation and interruption</strong><small>Context-aware calls, query deadlines, sqlite3_interrupt</small></div><em>Planned</em></li>
+        <li><span>06</span><div><strong>Concurrency and transaction safety</strong><small>Connection ownership, locking guarantees, race-tested behavior</small></div><em>Planned</em></li>
+        <li><span>07</span><div><strong>Resource and native-memory diagnostics</strong><small>Leak stress tests, handle accounting, instrumented SQLite checks</small></div><em>Planned</em></li>
+        <li><span>08</span><div><strong>SQLite features and error reporting</strong><small>Extended result codes, backup/restore, more value edge cases</small></div><em>Planned</em></li>
+        <li><span>09</span><div><strong>Fuzzing and performance baselines</strong><small>SQL binding fuzz tests and reproducible driver comparisons</small></div><em>Planned</em></li>
+        <li><span>10</span><div><strong>Platform support and releases</strong><small>Verified OS/architecture matrix, packaged releases, compatibility notes</small></div><em>Planned</em></li>
       </ul>
     </section>
     <section class="callout"><div><div class="section-kicker">OPEN SOURCE</div><h2>Inspect every layer.</h2><p>Read the architecture notes, report platform behavior, or help build the next tested milestone.</p></div><a class="button primary" href="https://github.com/Aswanidev-vs/gosqlite-ffi">Explore repository ↗</a></section>
