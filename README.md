@@ -114,150 +114,42 @@ Results depend on the SQLite build, OS, storage, Go version, and workload. These
 
 ## Comparative benchmarks and stress tests
 
-A separate benchmark module compares GoFFI SQLite with:
+The comparison harness targets four Go SQLite options:
 
-- [mattn/go-sqlite3](https://github.com/mattn/go-sqlite3) (CGO)
-- [modernc.org/sqlite](https://modernc.org/sqlite) (pure Go, transpiled SQLite)
-- [ncruces/go-sqlite3](https://github.com/ncruces/go-sqlite3) (pure Go, wasm2go)
+| Driver | Implementation | CGO |
+|---|---|---|
+| GoFFI SQLite | Native SQLite shared library through purego | No |
+| [mattn/go-sqlite3](https://github.com/mattn/go-sqlite3) | Native SQLite | Yes |
+| [modernc.org/sqlite](https://modernc.org/sqlite) | Transpiled SQLite | No |
+| [ncruces/go-sqlite3](https://github.com/ncruces/go-sqlite3) | SQLite compiled to WebAssembly and translated to Go | No |
 
-The benchmark dependencies are isolated under `benchmarks/go.mod`, so they do not become production library dependencies. All implementations use the same `database/sql`-based workload harness.
+### Results status
 
-Workloads include connection open/close, a CRUD round trip, reused prepared inserts, 100-row transaction batches, scans of 1,000 rows, and parallel reads/writes against a file-backed WAL database. Each driver also runs a concurrent stress test with eight workers and 100 insert/read cycles per worker, then verifies that all 800 rows were committed.
+**Verified benchmark measurements have not been captured yet.** These tables are a visible status tracker, not performance results. Do not interpret pending values as a ranking. Replace them with measured values only after the comparative workflow completes successfully and its raw output has been reviewed.
 
-Run locally on Linux with a compatible native SQLite shared library and CGO enabled for mattn:
+| Workload | GoFFI | mattn | modernc | ncruces |
+|---|---:|---:|---:|---:|
+| Open / close | Pending | Pending | Pending | Pending |
+| CRUD round trip | Pending | Pending | Pending | Pending |
+| Reused prepared inserts | Pending | Pending | Pending | Pending |
+| 100-row transaction batch | Pending | Pending | Pending | Pending |
+| Scan 1,000 rows | Pending | Pending | Pending | Pending |
+| Parallel WAL read/write | Pending | Pending | Pending | Pending |
+| Allocations / bytes per operation | Pending | Pending | Pending | Pending |
+| Concurrent stress test | Pending | Pending | Pending | Pending |
+
+### Run the comparison
 
 ```sh
 cd benchmarks
 go mod tidy
-go test ./... -run '^TestConcurrentStress
-```sh
-gofmt -w sqliteffi/*.go
-go test ./...
-go test -race ./...
-go test ./sqliteffi -run TestResourceLifecycleStress -count=10
-go vet -unsafeptr=false ./...
+go test ./... -run '^TestConcurrentStress$' -count=3 -timeout=10m
+go test -v ./... -run '^$' -bench '^BenchmarkDriver/' -benchmem -benchtime=2s -count=5 -timeout=30m
 ```
 
-The initial implementation uses the `github.com/ebitengine/purego` dependency. Network access is needed when fetching modules for the first time. See [Development Guide](docs/development.md).
+The suite covers connection open/close, CRUD, prepared inserts, transaction batches, 1,000-row scans, parallel read/write operations, and an eight-worker stress test verifying 800 inserts. Record Go version, OS/architecture, CGO setting, CPU, driver versions, and SQLite runtime versions with results.
 
-## Roadmap
-
-- [x] Initial scaffold, documentation, and CI
-- [x] CGO-free native library loading and version diagnostics
-- [x] Database open/close, parameterized execution, and typed row iteration
-- [x] Reusable prepared statements
-- [x] Explicit transactions
-- [x] Experimental `database/sql` driver
-- [ ] Context cancellation, deadlines, and SQLite interruption
-- [ ] Concurrency/transaction ownership guarantees and race-tested semantics
-- [ ] Resource and native-memory leak verification
-- [ ] Extended SQLite errors and value-binding edge cases
-- [ ] Backup/restore and operational configuration APIs
-- [ ] Fuzzing, robust failure-path tests, and performance baselines
-- [ ] Verified OS/architecture matrix and versioned release artifacts
-
-## Future implementation plan
-
-The following items are planned; they are not promises of current support. Prioritize correctness and lifecycle safety before adding more surface area.
-
-1. **Context cancellation and interruption** — context-aware driver calls, query deadlines, safe `sqlite3_interrupt` behavior, and tests for cancellation while a query is running.
-2. **Concurrency and transaction safety** — define connection ownership rules, serialize transaction use, and validate behavior with the Go race detector.
-3. **Resource and memory-leak verification** — package-wide goroutine leak detection with `goleak`, repeated open/prepare/query/close stress tests, native handle accounting, and ASan/Valgrind runs against an instrumented SQLite build. `goleak` detects goroutine leaks, not native heap leaks.
-4. **Error and value correctness** — extended SQLite result codes, consistent error types, and more tests for NULL, empty text/blob, integer boundaries, and invalid bindings.
-5. **SQLite backup and operational features** — online backup/restore, explicit journal/WAL configuration, and clearer busy-timeout behavior.
-6. **Fuzzing and resilience** — fuzz parameter conversion, row scanning, malformed SQL handling, and repeated failure/cleanup paths.
-7. **Benchmarks and compatibility** — reproducible workloads against other drivers, memory/allocation profiles, and documented trade-offs.
-8. **Platform matrix and releases** — verify supported OS/architecture combinations and native SQLite distributions, publish versioned releases, and maintain compatibility notes.
-
-### Test and leak checks
-
-```sh
-go test ./...
-go test -race ./...
-go test ./sqliteffi -run TestResourceLifecycleStress -count=10
-go test ./sqliteffi -run '^$' -bench . -benchmem
-```
-
-The automated suite uses `testify` assertions and `goleak` to detect goroutines left behind by tests. Stress tests check that GoFFI-owned database/row handles are released. These checks do **not** prove that a native SQLite build has no heap leaks; definitive native-allocation checks require an instrumented SQLite library and tools such as AddressSanitizer or Valgrind on a compatible platform.
-## Security
-
-Please read [SECURITY.md](SECURITY.md). Never load a native library from an untrusted path. Use parameter binding for values. This driver is experimental; validate the target OS/library combination and serialize manual transaction use on a shared `DB` connection.
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md). Please include tests and document native ABI assumptions with every new binding.
-
-## License
-
-MIT. See [LICENSE](LICENSE).
- -count=3 -timeout=10m
-go test ./... -run '^
-```sh
-gofmt -w sqliteffi/*.go
-go test ./...
-go test -race ./...
-go test ./sqliteffi -run TestResourceLifecycleStress -count=10
-go vet -unsafeptr=false ./...
-```
-
-The initial implementation uses the `github.com/ebitengine/purego` dependency. Network access is needed when fetching modules for the first time. See [Development Guide](docs/development.md).
-
-## Roadmap
-
-- [x] Initial scaffold, documentation, and CI
-- [x] CGO-free native library loading and version diagnostics
-- [x] Database open/close, parameterized execution, and typed row iteration
-- [x] Reusable prepared statements
-- [x] Explicit transactions
-- [x] Experimental `database/sql` driver
-- [ ] Context cancellation, deadlines, and SQLite interruption
-- [ ] Concurrency/transaction ownership guarantees and race-tested semantics
-- [ ] Resource and native-memory leak verification
-- [ ] Extended SQLite errors and value-binding edge cases
-- [ ] Backup/restore and operational configuration APIs
-- [ ] Fuzzing, robust failure-path tests, and performance baselines
-- [ ] Verified OS/architecture matrix and versioned release artifacts
-
-## Future implementation plan
-
-The following items are planned; they are not promises of current support. Prioritize correctness and lifecycle safety before adding more surface area.
-
-1. **Context cancellation and interruption** — context-aware driver calls, query deadlines, safe `sqlite3_interrupt` behavior, and tests for cancellation while a query is running.
-2. **Concurrency and transaction safety** — define connection ownership rules, serialize transaction use, and validate behavior with the Go race detector.
-3. **Resource and memory-leak verification** — package-wide goroutine leak detection with `goleak`, repeated open/prepare/query/close stress tests, native handle accounting, and ASan/Valgrind runs against an instrumented SQLite build. `goleak` detects goroutine leaks, not native heap leaks.
-4. **Error and value correctness** — extended SQLite result codes, consistent error types, and more tests for NULL, empty text/blob, integer boundaries, and invalid bindings.
-5. **SQLite backup and operational features** — online backup/restore, explicit journal/WAL configuration, and clearer busy-timeout behavior.
-6. **Fuzzing and resilience** — fuzz parameter conversion, row scanning, malformed SQL handling, and repeated failure/cleanup paths.
-7. **Benchmarks and compatibility** — reproducible workloads against other drivers, memory/allocation profiles, and documented trade-offs.
-8. **Platform matrix and releases** — verify supported OS/architecture combinations and native SQLite distributions, publish versioned releases, and maintain compatibility notes.
-
-### Test and leak checks
-
-```sh
-go test ./...
-go test -race ./...
-go test ./sqliteffi -run TestResourceLifecycleStress -count=10
-go test ./sqliteffi -run '^$' -bench . -benchmem
-```
-
-The automated suite uses `testify` assertions and `goleak` to detect goroutines left behind by tests. Stress tests check that GoFFI-owned database/row handles are released. These checks do **not** prove that a native SQLite build has no heap leaks; definitive native-allocation checks require an instrumented SQLite library and tools such as AddressSanitizer or Valgrind on a compatible platform.
-## Security
-
-Please read [SECURITY.md](SECURITY.md). Never load a native library from an untrusted path. Use parameter binding for values. This driver is experimental; validate the target OS/library combination and serialize manual transaction use on a shared `DB` connection.
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md). Please include tests and document native ABI assumptions with every new binding.
-
-## License
-
-MIT. See [LICENSE](LICENSE).
- -bench '^BenchmarkDriver/' -benchmem -benchtime=2s -count=5 -timeout=30m
-```
-
-The [comparative benchmark workflow](.github/workflows/benchmarks.yml) records Go version, OS/architecture, CGO setting, CPU information, runs stress tests, and uploads raw benchmark output. Compare results only when the machine, Go version, driver versions, SQLite version/build, journal mode, schema, and workload are accounted for. These measurements are workload-specific and are not a general performance ranking.
-
-**Results status:** the benchmark harness has been added, but measured results are not yet published here. Results will be appended after the workflow completes successfully and its output has been reviewed. No performance claim is made before that validation.
+See [the benchmark-specific README](benchmarks/README.md) and [the benchmark workflow](.github/workflows/benchmarks.yml). Results depend on the runner, SQLite build, and workload, so do not generalize one run into a universal performance ranking.
 
 ## Development
 
