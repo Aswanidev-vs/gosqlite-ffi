@@ -10,7 +10,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ebitengine/purego"
 )
 
 // ErrClosed is returned when a method is called after the native library is closed.
