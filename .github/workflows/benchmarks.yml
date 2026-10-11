@@ -1,0 +1,47 @@
+name: Comparative SQLite benchmarks
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'benchmarks/**'
+      - 'sqliteffi/**'
+      - '.github/workflows/benchmarks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache-dependency-path: benchmarks/go.mod
+      - name: Install native SQLite runtime
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-0
+      - name: Record environment
+        run: |
+          go version
+          go env GOOS GOARCH CGO_ENABLED
+          uname -a
+          lscpu
+          sqlite3 --version || true
+      - name: Resolve benchmark dependencies
+        working-directory: benchmarks
+        run: go mod tidy
+      - name: Run concurrency stress tests
+        working-directory: benchmarks
+        run: go test ./... -run '^TestConcurrentStress$' -count=3 -timeout=10m
+      - name: Run comparative benchmarks
+        working-directory: benchmarks
+        run: go test ./... -run '^$' -bench '^BenchmarkDriver/' -benchmem -benchtime=2s -count=5 -timeout=30m | tee benchmark-results.txt
+      - name: Upload raw results
+        uses: actions/upload-artifact@v4
+        with:
+          name: sqlite-comparative-benchmark-results
+          path: benchmarks/benchmark-results.txt
+          if-no-files-found: error
