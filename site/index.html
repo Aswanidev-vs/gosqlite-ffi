@@ -156,21 +156,22 @@ go run .</code></pre></div>
     <h2>Comparative benchmarks</h2>
     <p>GoFFI SQLite is being compared with mattn/go-sqlite3, modernc.org/sqlite, and ncruces/go-sqlite3 using shared database/sql workloads.</p>
   </div>
-  <p><strong>Results pending.</strong> Verified measurements have not been published yet. The table below is a status tracker, not a performance ranking.</p>
+  <p><strong>Initial measurements published.</strong> Linux/amd64, AMD EPYC 7763, Go stable; median of five benchmark repetitions. Cells show ns/op, B/op, and allocs/op.</p>
   <div class="table-wrap"><table>
     <thead><tr><th>Workload</th><th>GoFFI</th><th>mattn</th><th>modernc</th><th>ncruces</th></tr></thead>
     <tbody>
-      <tr><td>Open / close</td><td>Pending</td><td>Pending</td><td>Pending</td><td>Pending</td></tr>
-      <tr><td>CRUD round trip</td><td>Pending</td><td>Pending</td><td>Pending</td><td>Pending</td></tr>
-      <tr><td>Prepared inserts</td><td>Pending</td><td>Pending</td><td>Pending</td><td>Pending</td></tr>
-      <tr><td>100-row transaction batch</td><td>Pending</td><td>Pending</td><td>Pending</td><td>Pending</td></tr>
-      <tr><td>Scan 1,000 rows</td><td>Pending</td><td>Pending</td><td>Pending</td><td>Pending</td></tr>
-      <tr><td>Parallel WAL read/write</td><td>Pending</td><td>Pending</td><td>Pending</td><td>Pending</td></tr>
-      <tr><td>Allocations / bytes per operation</td><td>Pending</td><td>Pending</td><td>Pending</td><td>Pending</td></tr>
-      <tr><td>Concurrent stress</td><td>Pending</td><td>Pending</td><td>Pending</td><td>Pending</td></tr>
+      <tr><td>Open / close</td><td>689.7 ns/op<br>528 B/op<br>7 allocs/op</td><td>630.3 ns/op<br>528 B/op<br>7 allocs/op</td><td>621.0 ns/op<br>528 B/op<br>7 allocs/op</td><td>753.3 ns/op<br>592 B/op<br>7 allocs/op</td></tr>
+      <tr><td>CRUD round trip</td><td>1,319,820 ns/op<br>2,200 B/op<br>88 allocs/op</td><td>1,361,630 ns/op<br>1,111 B/op<br>35 allocs/op</td><td>1,571,157 ns/op<br>847 B/op<br>31 allocs/op</td><td>1,337,785 ns/op<br>4,424 B/op<br>86 allocs/op</td></tr>
+      <tr><td>Reused prepared inserts</td><td>621,937 ns/op<br>487 B/op<br>25 allocs/op</td><td>673,814 ns/op<br>159 B/op<br>7 allocs/op</td><td>752,524 ns/op<br>159 B/op<br>8 allocs/op</td><td>638,038 ns/op<br>1,847 B/op<br>32 allocs/op</td></tr>
+      <tr><td>100-row transaction batch</td><td>1,326,782 ns/op<br>61,682 B/op<br>2,619 allocs/op</td><td>1,088,848 ns/op<br>27,591 B/op<br>1,101 allocs/op</td><td>1,295,299 ns/op<br>18,690 B/op<br>993 allocs/op</td><td>1,353,173 ns/op<br>30,810 B/op<br>1,017 allocs/op</td></tr>
+      <tr><td>Scan 1,000 rows</td><td>3,016,697 ns/op<br>412,089 B/op<br>22,521 allocs/op</td><td>490,171 ns/op<br>37,768 B/op<br>2,764 allocs/op</td><td>442,472 ns/op<br>37,680 B/op<br>2,762 allocs/op</td><td>475,526 ns/op<br>16,008 B/op<br>1,019 allocs/op</td></tr>
+      <tr><td>Parallel WAL read/write</td><td>186,242 ns/op<br>1,395 B/op<br>52 allocs/op</td><td>88,551 ns/op<br>1,270 B/op<br>30 allocs/op</td><td>213,668 ns/op<br>1,137 B/op<br>28 allocs/op</td><td>77,671 ns/op<br>788 B/op<br>17 allocs/op</td></tr>
+      <tr><td>Concurrent stress test (3 runs)</td><td>Passed</td><td>Passed</td><td>Passed</td><td>Passed</td></tr>
     </tbody>
   </table></div>
-  <p>Workloads include CRUD, prepared statements, transaction batches, scans, parallel reads/writes, and an eight-worker stress test. See the <a href="https://github.com/Aswanidev-vs/gosqlite-ffi/tree/main/benchmarks">benchmark harness</a> and <a href="https://github.com/Aswanidev-vs/gosqlite-ffi/actions/workflows/benchmarks.yml">CI workflow</a>.</p>
+  <p><strong>Comparability caveat:</strong> GoFFI reported SQLite 3.45.1; the other three reported SQLite 3.53.4. These are initial measurements, not a definitive ranking. Re-run with matched SQLite runtime versions before drawing strict driver-level conclusions. <a href="https://github.com/Aswanidev-vs/gosqlite-ffi/actions/runs/38136727123">View raw benchmark artifact and workflow run</a>.</p>
+  <p>Workloads include CRUD, prepared statements, transaction batches, scans, parallel reads/writes, and an eight-worker stress test verifying 800 inserts. See the <a href="https://github.com/Aswanidev-vs/gosqlite-ffi/tree/main/benchmarks">benchmark harness</a> and <a href="https://github.com/Aswanidev-vs/gosqlite-ffi/actions/workflows/benchmarks.yml">CI workflow</a>.</p>
+
 </section>
 
 </body>
