@@ -21,17 +21,37 @@ jobs:
         with:
           go-version: stable
           cache-dependency-path: benchmarks/go.mod
-      - name: Install native SQLite development library
+      - name: Build matched SQLite 3.53.4 runtime
+        shell: bash
         run: |
+          set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y libsqlite3-dev sqlite3
+          sudo apt-get install -y build-essential curl
+          curl --fail --location --silent --show-error \
+            https://www.sqlite.org/2026/sqlite-autoconf-3530400.tar.gz \
+            --output /tmp/sqlite-autoconf-3530400.tar.gz
+          tar -xzf /tmp/sqlite-autoconf-3530400.tar.gz -C /tmp
+          cd /tmp/sqlite-autoconf-3530400
+          ./configure --prefix=/opt/sqlite-3.53.4 --enable-shared --disable-static
+          make -j2
+          sudo make install
+          echo "LD_LIBRARY_PATH=/opt/sqlite-3.53.4/lib:${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"
+          echo "/opt/sqlite-3.53.4/lib" | sudo tee /etc/ld.so.conf.d/sqlite-3.53.4.conf
+          sudo ldconfig
+      - name: Verify GoFFI native SQLite version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(LD_LIBRARY_PATH=/opt/sqlite-3.53.4/lib sqlite3 :memory: 'SELECT sqlite_version();')"
+          echo "Native SQLite runtime: $version"
+          test "$version" = "3.53.4"
       - name: Record environment
         run: |
           go version
           go env GOOS GOARCH CGO_ENABLED
           uname -a
           lscpu
-          sqlite3 --version || true
+          LD_LIBRARY_PATH=/opt/sqlite-3.53.4/lib sqlite3 --version
       - name: Resolve benchmark dependencies
         working-directory: benchmarks
         run: go mod tidy
