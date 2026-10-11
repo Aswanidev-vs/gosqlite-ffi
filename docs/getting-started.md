@@ -16,7 +16,7 @@ Prefer a controlled, known library path in production.
 go get github.com/Aswanidev-vs/gosqlite-ffi
 ```
 
-## 3. Read the SQLite version
+## 3. Read SQLite version information
 
 ```go
 package main
@@ -39,12 +39,19 @@ func main() {
     if err != nil {
         log.Fatal(err)
     }
-    fmt.Println(version)
+    versionNumber, err := lib.VersionNumber()
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    fmt.Printf("SQLite %s (numeric version %d)\n", version, versionNumber)
 }
 ```
+
+`VersionNumber` uses SQLite's documented numeric encoding (`major*1000000 + minor*1000 + patch`), allowing numeric comparisons without parsing the version string.
 
 For a deterministic deployment, call `sqliteffi.Load` with a trusted absolute path.
 
 ## What is not implemented yet?
 
-This first milestone only loads the library and calls `sqlite3_libversion`. It does not open databases, run SQL, bind parameters, or support `database/sql`. Those features need to be implemented and tested before this library is suitable for application data.
+This milestone only loads the library and calls SQLite's version diagnostic functions. It does not open databases, run SQL, bind parameters, or support `database/sql`. Those features need to be implemented and tested before this library is suitable for application data.
