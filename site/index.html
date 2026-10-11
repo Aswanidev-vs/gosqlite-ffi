@@ -145,6 +145,7 @@ go run .</code></pre></div>
         <li><span>09</span><div><strong>Fuzzing and performance baselines</strong><small>SQL binding fuzz tests and reproducible driver comparisons</small></div><em>Planned</em></li>
         <li><span>10</span><div><strong>Platform support and releases</strong><small>Verified OS/architecture matrix, packaged releases, compatibility notes</small></div><em>Planned</em></li>
       </ul>
+      <p class="inline-note"><strong>Leak-testing approach:</strong> automated tests use goleak for goroutine leaks, testify for assertions, repeated native-handle lifecycle stress tests, and a Linux race-detector job. These cannot prove the native SQLite heap is leak-free; that requires an instrumented SQLite build with AddressSanitizer or Valgrind.</p>
     </section>
     <section class="callout"><div><div class="section-kicker">OPEN SOURCE</div><h2>Inspect every layer.</h2><p>Read the architecture notes, report platform behavior, or help build the next tested milestone.</p></div><a class="button primary" href="https://github.com/Aswanidev-vs/gosqlite-ffi">Explore repository ↗</a></section>
   </main>
