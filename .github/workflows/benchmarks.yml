@@ -21,8 +21,10 @@ jobs:
         with:
           go-version: stable
           cache-dependency-path: benchmarks/go.mod
-      - name: Install native SQLite runtime
-        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev sqlite3
+      - name: Install native SQLite development library
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsqlite3-dev sqlite3
       - name: Record environment
         run: |
           go version
@@ -38,14 +40,10 @@ jobs:
         run: go test ./... -run '^TestConcurrentStress$' -count=3 -timeout=10m
       - name: Run comparative benchmarks
         working-directory: benchmarks
-        run: set -o pipefail; go test ./... -run '^
-      - name: Upload raw results
-        uses: actions/upload-artifact@v4
-        with:
-          name: sqlite-comparative-benchmark-results
-          path: benchmarks/benchmark-results.txt
-          if-no-files-found: error
- -bench '^BenchmarkDriver/' -benchmem -benchtime=2s -count=5 -timeout=30m | tee benchmark-results.txt
+        shell: bash
+        run: |
+          set -o pipefail
+          go test -v ./... -run '^$' -bench '^BenchmarkDriver/' -benchmem -benchtime=2s -count=5 -timeout=30m | tee benchmark-results.txt
       - name: Upload raw results
         uses: actions/upload-artifact@v4
         with:
