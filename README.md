@@ -123,20 +123,21 @@ The comparison harness targets four Go SQLite options:
 | [modernc.org/sqlite](https://modernc.org/sqlite) | Transpiled SQLite | No |
 | [ncruces/go-sqlite3](https://github.com/ncruces/go-sqlite3) | SQLite compiled to WebAssembly and translated to Go | No |
 
-### Results status
+### Measured results
 
-**Verified benchmark measurements have not been captured yet.** These tables are a visible status tracker, not performance results. Do not interpret pending values as a ranking. Replace them with measured values only after the comparative workflow completes successfully and its raw output has been reviewed.
+**Measured on 2026-10-11 in GitHub Actions** (Linux/amd64, AMD EPYC 7763, Go stable; five repetitions per benchmark, median reported). Each cell reports median `ns/op`, `B/op`, and `allocs/op`. The concurrent stress-test step passed all three runs. [Raw results artifact and workflow run](https://github.com/Aswanidev-vs/gosqlite-ffi/actions/runs/38136727123).
 
 | Workload | GoFFI | mattn | modernc | ncruces |
 |---|---:|---:|---:|---:|
-| Open / close | Pending | Pending | Pending | Pending |
-| CRUD round trip | Pending | Pending | Pending | Pending |
-| Reused prepared inserts | Pending | Pending | Pending | Pending |
-| 100-row transaction batch | Pending | Pending | Pending | Pending |
-| Scan 1,000 rows | Pending | Pending | Pending | Pending |
-| Parallel WAL read/write | Pending | Pending | Pending | Pending |
-| Allocations / bytes per operation | Pending | Pending | Pending | Pending |
-| Concurrent stress test | Pending | Pending | Pending | Pending |
+| Open / close | 689.7 ns/op; 528 B/op; 7 allocs/op | 630.3 ns/op; 528 B/op; 7 allocs/op | 621.0 ns/op; 528 B/op; 7 allocs/op | 753.3 ns/op; 592 B/op; 7 allocs/op |
+| CRUD round trip | 1,319,820 ns/op; 2,200 B/op; 88 allocs/op | 1,361,630 ns/op; 1,111 B/op; 35 allocs/op | 1,571,157 ns/op; 847 B/op; 31 allocs/op | 1,337,785 ns/op; 4,424 B/op; 86 allocs/op |
+| Reused prepared inserts | 621,937 ns/op; 487 B/op; 25 allocs/op | 673,814 ns/op; 159 B/op; 7 allocs/op | 752,524 ns/op; 159 B/op; 8 allocs/op | 638,038 ns/op; 1,847 B/op; 32 allocs/op |
+| 100-row transaction batch | 1,326,782 ns/op; 61,682 B/op; 2,619 allocs/op | 1,088,848 ns/op; 27,591 B/op; 1,101 allocs/op | 1,295,299 ns/op; 18,690 B/op; 993 allocs/op | 1,353,173 ns/op; 30,810 B/op; 1,017 allocs/op |
+| Scan 1,000 rows | 3,016,697 ns/op; 412,089 B/op; 22,521 allocs/op | 490,171 ns/op; 37,768 B/op; 2,764 allocs/op | 442,472 ns/op; 37,680 B/op; 2,762 allocs/op | 475,526 ns/op; 16,008 B/op; 1,019 allocs/op |
+| Parallel WAL read/write | 186,242 ns/op; 1,395 B/op; 52 allocs/op | 88,551 ns/op; 1,270 B/op; 30 allocs/op | 213,668 ns/op; 1,137 B/op; 28 allocs/op | 77,671 ns/op; 788 B/op; 17 allocs/op |
+| Concurrent stress test (3 runs) | Passed | Passed | Passed | Passed |
+
+**Comparability caveat:** GoFFI reported SQLite 3.45.1, while mattn, modernc, and ncruces reported SQLite 3.53.4. These are real measurements from the same runner and harness, but not a fully controlled SQLite-version comparison. Treat them as an initial baseline, not a definitive ranking; rerun with matched SQLite runtime versions before making strict driver-level conclusions.
 
 ### Run the comparison
 
