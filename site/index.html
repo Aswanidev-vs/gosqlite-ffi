@@ -150,5 +150,28 @@ go run .</code></pre></div>
     <section class="callout"><div><div class="section-kicker">OPEN SOURCE</div><h2>Inspect every layer.</h2><p>Read the architecture notes, report platform behavior, or help build the next tested milestone.</p></div><a class="button primary" href="https://github.com/Aswanidev-vs/gosqlite-ffi">Explore repository ↗</a></section>
   </main>
   <footer><a class="brand" href="#"><span class="brand-mark">G</span><span>GoFFI <b>SQLite</b></span></a><span>Experimental software · MIT License</span><div><a href="https://github.com/Aswanidev-vs/gosqlite-ffi/blob/main/README.md">Docs</a><a href="https://github.com/Aswanidev-vs/gosqlite-ffi/blob/main/SECURITY.md">Security</a></div></footer>
+<section id="benchmarks" class="section">
+  <div class="section-heading">
+    <p class="eyebrow">Performance &amp; reliability</p>
+    <h2>Comparative benchmarks</h2>
+    <p>GoFFI SQLite is being compared with mattn/go-sqlite3, modernc.org/sqlite, and ncruces/go-sqlite3 using shared database/sql workloads.</p>
+  </div>
+  <p><strong>Results pending.</strong> Verified measurements have not been published yet. The table below is a status tracker, not a performance ranking.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Workload</th><th>GoFFI</th><th>mattn</th><th>modernc</th><th>ncruces</th></tr></thead>
+    <tbody>
+      <tr><td>Open / close</td><td>Pending</td><td>Pending</td><td>Pending</td><td>Pending</td></tr>
+      <tr><td>CRUD round trip</td><td>Pending</td><td>Pending</td><td>Pending</td><td>Pending</td></tr>
+      <tr><td>Prepared inserts</td><td>Pending</td><td>Pending</td><td>Pending</td><td>Pending</td></tr>
+      <tr><td>100-row transaction batch</td><td>Pending</td><td>Pending</td><td>Pending</td><td>Pending</td></tr>
+      <tr><td>Scan 1,000 rows</td><td>Pending</td><td>Pending</td><td>Pending</td><td>Pending</td></tr>
+      <tr><td>Parallel WAL read/write</td><td>Pending</td><td>Pending</td><td>Pending</td><td>Pending</td></tr>
+      <tr><td>Allocations / bytes per operation</td><td>Pending</td><td>Pending</td><td>Pending</td><td>Pending</td></tr>
+      <tr><td>Concurrent stress</td><td>Pending</td><td>Pending</td><td>Pending</td><td>Pending</td></tr>
+    </tbody>
+  </table></div>
+  <p>Workloads include CRUD, prepared statements, transaction batches, scans, parallel reads/writes, and an eight-worker stress test. See the <a href="https://github.com/Aswanidev-vs/gosqlite-ffi/tree/main/benchmarks">benchmark harness</a> and <a href="https://github.com/Aswanidev-vs/gosqlite-ffi/actions/workflows/benchmarks.yml">CI workflow</a>.</p>
+</section>
+
 </body>
 </html>
