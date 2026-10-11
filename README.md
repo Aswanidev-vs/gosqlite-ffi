@@ -4,7 +4,7 @@
 
 [Project website](https://aswanidev-vs.github.io/gosqlite-ffi/) · [Getting Started](docs/getting-started.md) · [Architecture](docs/architecture.md) · [Security Policy](SECURITY.md)
 
-> **Status: experimental early implementation.** The library now opens/creates databases, executes single SQL statements with positional parameters, and queries typed rows. Transactions and `database/sql` integration are not implemented. Review the limitations and run your own tests before using it with important data.
+> **Status: experimental early implementation.** The library supports database lifecycle management, parameterized SQL, reusable native prepared statements, typed row iteration, explicit transactions, and an experimental `database/sql` driver. Review the limitations and run your own tests before using it with important data.
 
 ## Why GoFFI SQLite?
 
@@ -19,7 +19,7 @@
 
 ## Requirements
 
-- Go 1.22 or newer
+- Go 1.25 or newer
 - A compatible native SQLite shared library
 - An OS/architecture combination verified by CI and your own smoke tests
 
@@ -70,6 +70,38 @@ Run with `go run .`. The database file is created in the current working directo
 
 See [examples/basic](examples/basic) for a complete runnable example.
 
+### Reusable prepared statements
+
+```go
+stmt, err := db.Prepare("INSERT INTO users(name) VALUES (?)")
+if err != nil { log.Fatal(err) }
+defer stmt.Close()
+if _, err := stmt.Exec("Ada"); err != nil { log.Fatal(err) }
+```
+
+### Transactions
+
+```go
+tx, err := db.Begin()
+if err != nil { log.Fatal(err) }
+if _, err := tx.Exec("INSERT INTO users(name) VALUES (?)", "Grace"); err != nil {
+    _ = tx.Rollback()
+    log.Fatal(err)
+}
+if err := tx.Commit(); err != nil { log.Fatal(err) }
+```
+
+### `database/sql` driver
+
+```go
+sql.Register("sqliteffi", sqliteffi.Driver{})
+sqldb, err := sql.Open("sqliteffi", "app.db")
+if err != nil { log.Fatal(err) }
+defer sqldb.Close()
+```
+
+Import `database/sql` to use this example. The DSN is the SQLite file path (or `:memory:`).
+
 ## Benchmarks
 
 Run the insert and single-row query benchmarks against the native SQLite library installed on your machine:
@@ -85,27 +117,55 @@ Results depend on the SQLite build, OS, storage, Go version, and workload. These
 ```sh
 gofmt -w sqliteffi/*.go
 go test ./...
-go vet ./...
+go test -race ./...
+go test ./sqliteffi -run TestResourceLifecycleStress -count=10
+go vet -unsafeptr=false ./...
 ```
 
 The initial implementation uses the `github.com/ebitengine/purego` dependency. Network access is needed when fetching modules for the first time. See [Development Guide](docs/development.md).
 
 ## Roadmap
 
-- [x] Initial scaffold and docs
-- [x] CGO-free shared library loading through purego
-- [x] `sqlite3_libversion()` and `sqlite3_libversion_number()` diagnostics
-- [x] Website, CI workflows, security policy and Dependabot
-- [x] Database open/close handle APIs
-- [x] Prepared statements and bound parameters
-- [x] Row iteration and typed values
-- [ ] Transactions, interruption and busy handling
-- [ ] `database/sql/driver` integration
-- [ ] Broader verified OS/architecture matrix and release artifacts
+- [x] Initial scaffold, documentation, and CI
+- [x] CGO-free native library loading and version diagnostics
+- [x] Database open/close, parameterized execution, and typed row iteration
+- [x] Reusable prepared statements
+- [x] Explicit transactions
+- [x] Experimental `database/sql` driver
+- [ ] Context cancellation, deadlines, and SQLite interruption
+- [ ] Concurrency/transaction ownership guarantees and race-tested semantics
+- [ ] Resource and native-memory leak verification
+- [ ] Extended SQLite errors and value-binding edge cases
+- [ ] Backup/restore and operational configuration APIs
+- [ ] Fuzzing, robust failure-path tests, and performance baselines
+- [ ] Verified OS/architecture matrix and versioned release artifacts
 
+## Future implementation plan
+
+The following items are planned; they are not promises of current support. Prioritize correctness and lifecycle safety before adding more surface area.
+
+1. **Context cancellation and interruption** — context-aware driver calls, query deadlines, safe `sqlite3_interrupt` behavior, and tests for cancellation while a query is running.
+2. **Concurrency and transaction safety** — define connection ownership rules, serialize transaction use, and validate behavior with the Go race detector.
+3. **Resource and memory-leak verification** — package-wide goroutine leak detection with `goleak`, repeated open/prepare/query/close stress tests, native handle accounting, and ASan/Valgrind runs against an instrumented SQLite build. `goleak` detects goroutine leaks, not native heap leaks.
+4. **Error and value correctness** — extended SQLite result codes, consistent error types, and more tests for NULL, empty text/blob, integer boundaries, and invalid bindings.
+5. **SQLite backup and operational features** — online backup/restore, explicit journal/WAL configuration, and clearer busy-timeout behavior.
+6. **Fuzzing and resilience** — fuzz parameter conversion, row scanning, malformed SQL handling, and repeated failure/cleanup paths.
+7. **Benchmarks and compatibility** — reproducible workloads against other drivers, memory/allocation profiles, and documented trade-offs.
+8. **Platform matrix and releases** — verify supported OS/architecture combinations and native SQLite distributions, publish versioned releases, and maintain compatibility notes.
+
+### Test and leak checks
+
+```sh
+go test ./...
+go test -race ./...
+go test ./sqliteffi -run TestResourceLifecycleStress -count=10
+go test ./sqliteffi -run '^$' -bench . -benchmem
+```
+
+The automated suite uses `testify` assertions and `goleak` to detect goroutines left behind by tests. Stress tests check that GoFFI-owned database/row handles are released. These checks do **not** prove that a native SQLite build has no heap leaks; definitive native-allocation checks require an instrumented SQLite library and tools such as AddressSanitizer or Valgrind on a compatible platform.
 ## Security
 
-Please read [SECURITY.md](SECURITY.md). Never load a native library from an untrusted path. Use parameter binding for values; transactions and database/sql integration are not implemented yet.
+Please read [SECURITY.md](SECURITY.md). Never load a native library from an untrusted path. Use parameter binding for values. This driver is experimental; validate the target OS/library combination and serialize manual transaction use on a shared `DB` connection.
 
 ## Contributing
 

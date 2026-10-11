@@ -15,6 +15,7 @@ type Rows struct {
  done bool
  err error
  closed bool
+ owner *Stmt
 }
 
 // Query prepares a SQL statement and returns rows. The caller must close Rows.
@@ -110,7 +111,14 @@ func (r *Rows) Close() error {
  r.db.mu.Lock()
  defer r.db.mu.Unlock()
  if r.closed { return nil }
- rc:=r.db.lib.api.finalize(r.stmt)
+ var rc int32
+ if r.owner != nil {
+  rc = r.db.lib.api.reset(r.stmt)
+  _ = r.db.lib.api.clearBindings(r.stmt)
+  r.owner.active = false
+ } else {
+  rc = r.db.lib.api.finalize(r.stmt)
+ }
  r.stmt=nil; r.closed=true; r.current=false; r.db.activeRows--
  if rc!=sqliteOK && r.err==nil { r.err=r.db.error(rc) }
  return r.err

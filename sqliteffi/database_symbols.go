@@ -37,6 +37,8 @@ func registerDatabaseAPI(l *Library, lookup func(string) (uintptr, error)) error
 		{"sqlite3_last_insert_rowid", &l.api.lastInsertRowID},
 		{"sqlite3_changes", &l.api.changes},
 		{"sqlite3_busy_timeout", &l.api.busyTimeout},
+		{"sqlite3_reset", &l.api.reset},
+		{"sqlite3_clear_bindings", &l.api.clearBindings},
 	}
 
 	for _, symbol := range symbols {

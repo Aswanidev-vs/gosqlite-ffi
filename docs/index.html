@@ -27,10 +27,10 @@
         <a class="button secondary" href="https://github.com/Aswanidev-vs/gosqlite-ffi">View source ↗</a>
       </div>
       <div class="terminal" aria-label="Example command"><div class="terminal-head"><span></span><span></span><span></span><label>terminal</label><button id="copy-command" type="button">Copy</button></div><pre><span class="prompt">$</span> go get github.com/Aswanidev-vs/gosqlite-ffi</pre></div>
-      <p class="hero-note">Current milestone: open databases, execute parameterized SQL, and query typed rows. Transactions and database/sql integration remain planned.</p>
+      <p class="hero-note">Current milestone: database lifecycle, reusable prepared statements, transactions, and database/sql driver support are implemented; cross-platform validation is ongoing.</p>
     </section>
     <section class="metrics" aria-label="Project facts">
-      <div><span class="metric-label">LANGUAGE</span><strong>Go 1.22+</strong></div>
+      <div><span class="metric-label">LANGUAGE</span><strong>Go 1.25+</strong></div>
       <div><span class="metric-label">NATIVE BOUNDARY</span><strong>purego</strong></div>
       <div><span class="metric-label">BUILD MODE</span><strong>CGO-free</strong></div>
       <div><span class="metric-label">MATURITY</span><strong class="amber">Prototype</strong></div>
@@ -73,7 +73,7 @@ func main() {
     </section>
     <section id="examples" class="section">
       <div class="section-kicker">PRACTICAL EXAMPLES</div><h2>Use the API that exists today</h2>
-      <p class="section-intro">These examples cover the current diagnostic API only. GoFFI SQLite does not open databases or execute SQL yet.</p>
+      <p class="section-intro">GoFFI SQLite now supports database connections, parameterized statements, transactions, and the standard database/sql interfaces.</p>
       <div class="code-card"><div class="code-card-head"><span>Example 1 · Print version and numeric version</span><button class="copy-code" type="button">Copy code</button></div><pre><code>package main
 
 import (
@@ -128,16 +128,16 @@ func main() {
       <p class="inline-note"><strong>Platform note:</strong> The explicit path above is an example for some Linux distributions; use the actual absolute path on your system. Windows and macOS use different library names and locations.</p>
       <div class="code-card"><div class="code-card-head"><span>Example 3 · Install and run</span><button class="copy-code" type="button">Copy code</button></div><pre><code>go get github.com/Aswanidev-vs/gosqlite-ffi
 go run .</code></pre></div>
-      <p class="inline-note"><strong>Important:</strong> The native SQLite shared library must be installed and discoverable when using <code>LoadDefault</code>. This package currently exposes <code>Version</code>, <code>VersionNumber</code>, <code>Load</code>, and <code>Close</code>; it does not yet support SQL queries, prepared statements, or transactions.</p>
+      <p class="inline-note"><strong>Important:</strong> The native SQLite shared library must be installed and discoverable when using <code>LoadDefault</code>. This package is experimental; review the platform notes and run the test suite on your target OS before production use.</p>
     </section>
     <section id="roadmap" class="section roadmap">
-      <div class="section-kicker">WHAT'S NEXT</div><h2>An early database API, still under development.</h2>
-      <p class="section-intro">The core open/execute/query path is implemented. Transactions and database/sql integration remain on the roadmap.</p>
+      <div class="section-kicker">IMPLEMENTATION STATUS</div><h2>From native calls to Go database APIs.</h2>
+      <p class="section-intro">The initial implementation now covers the database lifecycle, reusable native statements, transactions, and a standard-library SQL driver. This remains experimental and needs validation on every supported platform.</p>
       <ul class="roadmap-list">
-        <li class="done"><span>✓</span><div><strong>Native library loading</strong><small>Resolve and call sqlite3_libversion()</small></div><em>Done</em></li>
-        <li><span>02</span><div><strong>Database open and close</strong><small>Own native handles and surface SQLite errors</small></div><em>Planned</em></li>
-        <li><span>03</span><div><strong>Prepared statements</strong><small>Bound parameters, typed values, and row iteration</small></div><em>Planned</em></li>
-        <li><span>04</span><div><strong>Transactions and driver</strong><small>Transactions, busy handling, database/sql integration</small></div><em>Planned</em></li>
+        <li class="done"><span>✓</span><div><strong>Native library loading</strong><small>Resolve SQLite symbols and report runtime version</small></div><em>Done</em></li>
+        <li class="done"><span>✓</span><div><strong>Database open and close</strong><small>Own native handles, serialize calls, and surface SQLite errors</small></div><em>Implemented</em></li>
+        <li class="done"><span>✓</span><div><strong>Prepared statements</strong><small>Reusable native statements, bound parameters, typed rows</small></div><em>Implemented</em></li>
+        <li class="done"><span>✓</span><div><strong>Transactions and driver</strong><small>Commit/rollback plus database/sql integration</small></div><em>Implemented</em></li>
       </ul>
     </section>
     <section class="callout"><div><div class="section-kicker">OPEN SOURCE</div><h2>Inspect every layer.</h2><p>Read the architecture notes, report platform behavior, or help build the next tested milestone.</p></div><a class="button primary" href="https://github.com/Aswanidev-vs/gosqlite-ffi">Explore repository ↗</a></section>
