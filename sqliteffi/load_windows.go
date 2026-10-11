@@ -4,6 +4,7 @@ package sqliteffi
 
 import (
 	"errors"
+	"fmt"
 	"syscall"
 	"unsafe"
 
@@ -20,14 +21,24 @@ func closeLibrary(handle uintptr) error {
 }
 
 func registerLibVersion(l *Library, handle uintptr) error {
-	symbol, err := syscall.GetProcAddress(syscall.Handle(handle), "sqlite3_libversion")
+	versionSymbol, err := syscall.GetProcAddress(syscall.Handle(handle), "sqlite3_libversion")
 	if err != nil {
-		return err
+		return fmt.Errorf("sqlite3_libversion: %w", err)
 	}
-	if symbol == 0 {
-		return errors.New("symbol address is zero")
+	if versionSymbol == 0 {
+		return errors.New("sqlite3_libversion symbol address is zero")
 	}
-	purego.RegisterFunc(&l.version, uintptr(symbol))
+
+	versionNumberSymbol, err := syscall.GetProcAddress(syscall.Handle(handle), "sqlite3_libversion_number")
+	if err != nil {
+		return fmt.Errorf("sqlite3_libversion_number: %w", err)
+	}
+	if versionNumberSymbol == 0 {
+		return errors.New("sqlite3_libversion_number symbol address is zero")
+	}
+
+	purego.RegisterFunc(&l.version, uintptr(versionSymbol))
+	purego.RegisterFunc(&l.versionNumber, uintptr(versionNumberSymbol))
 	return nil
 }
 
