@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="GoFFI SQLite is an experimental CGO-free Go binding prototype for SQLite's C API using purego.">
+  <title>GoFFI SQLite — Native SQLite, without CGO</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="GoFFI SQLite home"><span class="brand-mark">G</span><span>GoFFI <b>SQLite</b></span></a>
+    <nav aria-label="Main navigation">
+      <a href="#features">Overview</a><a href="#quickstart">Quick start</a><a href="#roadmap">Roadmap</a>
+      <a class="nav-github" href="https://github.com/Aswanidev-vs/gosqlite-ffi">GitHub <span aria-hidden="true">↗</span></a>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">◐</button>
+    </nav>
+  </header>
+  <main>
+    <section class="hero">
+      <div class="eyebrow"><span class="status-dot"></span> EXPERIMENTAL · EARLY DEVELOPMENT</div>
+      <h1>SQLite from Go.<br><span>Without CGO.</span></h1>
+      <p class="hero-copy">A small, transparent experiment in calling SQLite's native C API from Go using <code>purego</code>. No C compiler in your build pipeline; still uses a trusted SQLite shared library at runtime.</p>
+      <div class="hero-actions">
+        <a class="button primary" href="#quickstart">Get started <span aria-hidden="true">→</span></a>
+        <a class="button secondary" href="https://github.com/Aswanidev-vs/gosqlite-ffi">View source ↗</a>
+      </div>
+      <div class="terminal" aria-label="Example command"><div class="terminal-head"><span></span><span></span><span></span><label>terminal</label><button id="copy-command" type="button">Copy</button></div><pre><span class="prompt">$</span> go get github.com/Aswanidev-vs/gosqlite-ffi</pre></div>
+      <p class="hero-note">Current milestone: load the library and read <code>sqlite3_libversion()</code>. SQL operations are not implemented yet.</p>
+    </section>
+    <section class="metrics" aria-label="Project facts">
+      <div><span class="metric-label">LANGUAGE</span><strong>Go 1.22+</strong></div>
+      <div><span class="metric-label">NATIVE BOUNDARY</span><strong>purego</strong></div>
+      <div><span class="metric-label">BUILD MODE</span><strong>CGO-free</strong></div>
+      <div><span class="metric-label">MATURITY</span><strong class="amber">Prototype</strong></div>
+    </section>
+    <section id="features" class="section">
+      <div class="section-kicker">THE APPROACH</div><h2>Small surface. Clear trade-offs.</h2>
+      <p class="section-intro">GoFFI SQLite aims to make the native boundary explicit instead of hiding it behind a large abstraction too early.</p>
+      <div class="feature-grid">
+        <article class="feature"><div class="feature-icon">↔</div><h3>CGO-free calls</h3><p>Resolve native symbols at runtime through purego and avoid compiling Go code through CGO.</p></article>
+        <article class="feature"><div class="feature-icon">◈</div><h3>Upstream SQLite</h3><p>Reuse SQLite itself rather than reimplementing SQL, storage, or transaction semantics.</p></article>
+        <article class="feature"><div class="feature-icon">⌘</div><h3>Explicit lifecycle</h3><p>Keep library loading, errors, ownership, and resource lifetime visible and reviewable.</p></article>
+      </div>
+    </section>
+    <section id="quickstart" class="section quickstart">
+      <div class="section-kicker">FIRST CALL</div><h2>Read the runtime version</h2>
+      <p class="section-intro">Install a compatible native SQLite library, then use the diagnostic API.</p>
+      <div class="code-card"><div class="code-card-head"><span>main.go</span><button id="copy-example" type="button">Copy code</button></div><pre><code>package main
+
+import (
+    "fmt"
+    "log"
+
+    "github.com/Aswanidev-vs/gosqlite-ffi/sqliteffi"
+)
+
+func main() {
+    lib, err := sqliteffi.LoadDefault()
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer lib.Close()
+
+    version, err := lib.Version()
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Println("SQLite", version)
+}</code></pre></div>
+      <p class="inline-note"><strong>Deployment note:</strong> CGO-free does not mean self-contained. For deterministic deployments, use <code>sqliteffi.Load</code> with a trusted absolute library path.</p>
+    </section>
+    <section id="roadmap" class="section roadmap">
+      <div class="section-kicker">WHAT'S NEXT</div><h2>A prototype, not a production driver.</h2>
+      <p class="section-intro">The project will grow through tested API layers, not promises. Database operations are still on the roadmap.</p>
+      <ul class="roadmap-list">
+        <li class="done"><span>✓</span><div><strong>Native library loading</strong><small>Resolve and call sqlite3_libversion()</small></div><em>Done</em></li>
+        <li><span>02</span><div><strong>Database open and close</strong><small>Own native handles and surface SQLite errors</small></div><em>Planned</em></li>
+        <li><span>03</span><div><strong>Prepared statements</strong><small>Bound parameters, typed values, and row iteration</small></div><em>Planned</em></li>
+        <li><span>04</span><div><strong>Transactions and driver</strong><small>Transactions, busy handling, database/sql integration</small></div><em>Planned</em></li>
+      </ul>
+    </section>
+    <section class="callout"><div><div class="section-kicker">OPEN SOURCE</div><h2>Inspect every layer.</h2><p>Read the architecture notes, report platform behavior, or help build the next tested milestone.</p></div><a class="button primary" href="https://github.com/Aswanidev-vs/gosqlite-ffi">Explore repository ↗</a></section>
+  </main>
+  <footer><a class="brand" href="#"><span class="brand-mark">G</span><span>GoFFI <b>SQLite</b></span></a><span>Experimental software · MIT License</span><div><a href="https://github.com/Aswanidev-vs/gosqlite-ffi/blob/main/README.md">Docs</a><a href="https://github.com/Aswanidev-vs/gosqlite-ffi/blob/main/SECURITY.md">Security</a></div></footer>
+</body>
+</html>
