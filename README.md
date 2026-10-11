@@ -125,7 +125,7 @@ The comparison harness targets four Go SQLite options:
 
 ### Measured results
 
-**Measured on 2026-10-11 in GitHub Actions** on Linux/amd64 using an AMD EPYC 7763 64-Core Processor. Each value is the median of five benchmark repetitions and includes `ns/op`, `B/op`, and `allocs/op`. The three-run concurrent stress test passed for all four drivers. [Raw benchmark artifact and workflow](https://github.com/Aswanidev-vs/gosqlite-ffi/actions/runs/38136727123).
+**Historical baseline measured on 2026-10-11** in GitHub Actions on Linux/amd64 using an AMD EPYC 7763 64-Core Processor. Each value is the median of five benchmark repetitions and includes `ns/op`, `B/op`, and `allocs/op`. The three-run concurrent stress test passed for all four drivers. These measurements predate the matched-runtime workflow and are retained for traceability, not as current apples-to-apples results. [Raw benchmark artifact](https://github.com/Aswanidev-vs/gosqlite-ffi/actions/runs/38136727123).
 
 | Workload | GoFFI | mattn | modernc | ncruces |
 |---|---:|---:|---:|---:|
@@ -136,7 +136,7 @@ The comparison harness targets four Go SQLite options:
 | Scan 1,000 rows | 3,016,697 ns/op; 412,089 B/op; 22,521 allocs/op | 490,171 ns/op; 37,768 B/op; 2,764 allocs/op | 442,472 ns/op; 37,680 B/op; 2,762 allocs/op | 475,526 ns/op; 16,008 B/op; 1,019 allocs/op |
 | Parallel WAL read/write | 186,242 ns/op; 1,395 B/op; 52 allocs/op | 88,551 ns/op; 1,270 B/op; 30 allocs/op | 213,668 ns/op; 1,137 B/op; 28 allocs/op | 77,446 ns/op; 788 B/op; 17 allocs/op |
 
-**Comparability caveat:** GoFFI reported SQLite 3.45.1; mattn, modernc, and ncruces reported SQLite 3.53.4. These are measured results from the same runner and harness, but the SQLite runtime versions differ. Treat this as an initial baseline, not a definitive driver ranking. A matched-version run is needed for a stricter comparison.
+**Comparability status:** The historical results above used SQLite 3.45.1 for GoFFI and SQLite 3.53.4 for mattn, modernc, and ncruces, so they are not a matched-version comparison. The benchmark workflow now builds and selects SQLite 3.53.4 for GoFFI and verifies the version before running tests. Do not interpret the historical table as current comparative performance; replace it only after a successful matched-version run and review of its raw output.
 
 ### Run the comparison
 
@@ -161,7 +161,7 @@ go test ./sqliteffi -run TestResourceLifecycleStress -count=10
 go vet -unsafeptr=false ./...
 ```
 
-The initial implementation uses the `github.com/ebitengine/purego` dependency. Network access is needed when fetching modules for the first time. See [Development Guide](docs/development.md).
+The native call layer uses [`github.com/ebitengine/purego`](https://github.com/ebitengine/purego). Tests also use `testify` assertions and `goleak` for goroutine-leak detection. Network access is needed when fetching Go modules for the first time. See [Development Guide](docs/development.md).
 
 ## Roadmap
 
@@ -173,10 +173,12 @@ The initial implementation uses the `github.com/ebitengine/purego` dependency. N
 - [x] Experimental `database/sql` driver
 - [ ] Context cancellation, deadlines, and SQLite interruption
 - [ ] Concurrency/transaction ownership guarantees and race-tested semantics
-- [ ] Resource and native-memory leak verification
+- [x] Test assertion helpers and goroutine-leak checks (`testify`, `goleak`)
+- [ ] Native-memory leak verification with an instrumented SQLite build
 - [ ] Extended SQLite errors and value-binding edge cases
 - [ ] Backup/restore and operational configuration APIs
-- [ ] Fuzzing, robust failure-path tests, and performance baselines
+- [ ] Fuzzing and expanded failure-path tests
+- [ ] Refreshed matched-version comparative performance baseline
 - [ ] Verified OS/architecture matrix and versioned release artifacts
 
 ## Future implementation plan
@@ -185,7 +187,7 @@ The following items are planned; they are not promises of current support. Prior
 
 1. **Context cancellation and interruption** — context-aware driver calls, query deadlines, safe `sqlite3_interrupt` behavior, and tests for cancellation while a query is running.
 2. **Concurrency and transaction safety** — define connection ownership rules, serialize transaction use, and validate behavior with the Go race detector.
-3. **Resource and memory-leak verification** — package-wide goroutine leak detection with `goleak`, repeated open/prepare/query/close stress tests, native handle accounting, and ASan/Valgrind runs against an instrumented SQLite build. `goleak` detects goroutine leaks, not native heap leaks.
+3. **Resource and memory-leak verification** — `testify` assertions and `goleak` checks are already included in the test dependencies and suite. Continue repeated open/prepare/query/close stress tests and native handle accounting, then add ASan/Valgrind runs against an instrumented SQLite build. `goleak` detects goroutine leaks, not native heap leaks.
 4. **Error and value correctness** — extended SQLite result codes, consistent error types, and more tests for NULL, empty text/blob, integer boundaries, and invalid bindings.
 5. **SQLite backup and operational features** — online backup/restore, explicit journal/WAL configuration, and clearer busy-timeout behavior.
 6. **Fuzzing and resilience** — fuzz parameter conversion, row scanning, malformed SQL handling, and repeated failure/cleanup paths.
