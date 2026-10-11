@@ -52,9 +52,6 @@ func Benchmarks(b *testing.B, open OpenFunc) {
 		db := openDB(b, open)
 		defer db.Close()
 		if _, err := db.Exec("CREATE TABLE item (id INTEGER PRIMARY KEY, value TEXT NOT NULL)"); err != nil { b.Fatal(err) }
-		stmt, err := db.Prepare("INSERT INTO item(value) VALUES (?)")
-		if err != nil { b.Fatal(err) }
-		defer stmt.Close()
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			tx, err := db.Begin()
