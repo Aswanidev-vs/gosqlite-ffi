@@ -51,7 +51,7 @@ func (c *driverConn) ExecContext(ctx context.Context, query string, args []drive
 	for i, a := range args { values[i] = a.Value }
 	result, err := c.db.Exec(query, values...)
 	if err != nil { return nil, err }
-	return driverResult(result), nil
+	return driverResult{result: result}, nil
 }
 func (c *driverConn) QueryContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Rows, error) {
 	if err := ctx.Err(); err != nil { return nil, err }
@@ -67,16 +67,16 @@ func (s *driverStmt) Close() error { return s.stmt.Close() }
 func (s *driverStmt) NumInput() int { return -1 }
 func (s *driverStmt) Exec(args []driver.Value) (driver.Result, error) {
 	values := make([]any, len(args)); for i, a := range args { values[i] = a }
-	r, err := s.stmt.Exec(values...); if err != nil { return nil, err }; return driverResult(r), nil
+	r, err := s.stmt.Exec(values...); if err != nil { return nil, err }; return driverResult{result: r}, nil
 }
 func (s *driverStmt) Query(args []driver.Value) (driver.Rows, error) {
 	values := make([]any, len(args)); for i, a := range args { values[i] = a }
 	r, err := s.stmt.Query(values...); if err != nil { return nil, err }; return &driverRows{rows:r}, nil
 }
 
-type driverResult Result
-func (r driverResult) LastInsertId() (int64, error) { return r.LastInsertID, nil }
-func (r driverResult) RowsAffected() (int64, error) { return r.RowsAffected, nil }
+type driverResult struct { result Result }
+func (r driverResult) LastInsertId() (int64, error) { return r.result.LastInsertID, nil }
+func (r driverResult) RowsAffected() (int64, error) { return r.result.RowsAffected, nil }
 
 type driverRows struct { rows *Rows }
 func (r *driverRows) Columns() []string { return r.rows.Columns() }
