@@ -2,7 +2,6 @@ package sqliteffi
 
 import (
  "fmt"
- "unsafe"
 
  "github.com/ebitengine/purego"
 )
@@ -25,6 +24,5 @@ func registerDatabaseAPI(l *Library, lookup func(string) (uintptr,error)) error 
  }
  // Keep the typed function table alive as part of Library.
  l.api = a
- _ = unsafe.Pointer(nil)
  return nil
 }
