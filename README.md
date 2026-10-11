@@ -4,7 +4,7 @@
 
 [Project website](https://aswanidev-vs.github.io/gosqlite-ffi/) · [Getting Started](docs/getting-started.md) · [Architecture](docs/architecture.md) · [Security Policy](SECURITY.md)
 
-> **Status: experimental early implementation.** The library now opens/creates databases, executes single SQL statements with positional parameters, and queries typed rows. Transactions and `database/sql` integration are not implemented. Review the limitations and run your own tests before using it with important data.
+> **Status: experimental early implementation.** The library supports database lifecycle management, parameterized SQL, reusable native prepared statements, typed row iteration, explicit transactions, and an experimental `database/sql` driver. Review the limitations and run your own tests before using it with important data.
 
 ## Why GoFFI SQLite?
 
@@ -19,7 +19,7 @@
 
 ## Requirements
 
-- Go 1.22 or newer
+- Go 1.25 or newer
 - A compatible native SQLite shared library
 - An OS/architecture combination verified by CI and your own smoke tests
 
@@ -70,6 +70,38 @@ Run with `go run .`. The database file is created in the current working directo
 
 See [examples/basic](examples/basic) for a complete runnable example.
 
+### Reusable prepared statements
+
+```go
+stmt, err := db.Prepare("INSERT INTO users(name) VALUES (?)")
+if err != nil { log.Fatal(err) }
+defer stmt.Close()
+if _, err := stmt.Exec("Ada"); err != nil { log.Fatal(err) }
+```
+
+### Transactions
+
+```go
+tx, err := db.Begin()
+if err != nil { log.Fatal(err) }
+if _, err := tx.Exec("INSERT INTO users(name) VALUES (?)", "Grace"); err != nil {
+    _ = tx.Rollback()
+    log.Fatal(err)
+}
+if err := tx.Commit(); err != nil { log.Fatal(err) }
+```
+
+### `database/sql` driver
+
+```go
+sql.Register("sqliteffi", sqliteffi.Driver{})
+sqldb, err := sql.Open("sqliteffi", "app.db")
+if err != nil { log.Fatal(err) }
+defer sqldb.Close()
+```
+
+Import `database/sql` to use this example. The DSN is the SQLite file path (or `:memory:`).
+
 ## Benchmarks
 
 Run the insert and single-row query benchmarks against the native SQLite library installed on your machine:
@@ -99,13 +131,14 @@ The initial implementation uses the `github.com/ebitengine/purego` dependency. N
 - [x] Database open/close handle APIs
 - [x] Prepared statements and bound parameters
 - [x] Row iteration and typed values
-- [ ] Transactions, interruption and busy handling
-- [ ] `database/sql/driver` integration
+- [x] Explicit transactions with commit and rollback
+- [x] Experimental `database/sql/driver` integration
+- [ ] Context cancellation/interruption and broader busy handling
 - [ ] Broader verified OS/architecture matrix and release artifacts
 
 ## Security
 
-Please read [SECURITY.md](SECURITY.md). Never load a native library from an untrusted path. Use parameter binding for values; transactions and database/sql integration are not implemented yet.
+Please read [SECURITY.md](SECURITY.md). Never load a native library from an untrusted path. Use parameter binding for values. This driver is experimental; validate the target OS/library combination and serialize manual transaction use on a shared `DB` connection.
 
 ## Contributing
 
