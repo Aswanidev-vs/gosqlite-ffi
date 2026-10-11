@@ -29,3 +29,18 @@ jobs:
         run: go test ./...
       - name: Vet
         run: go vet -unsafeptr=false ./...
+
+  race:
+    name: Race detector and lifecycle stress
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: Resolve modules and checksums
+        run: go mod tidy
+      - name: Race detector
+        run: go test -race ./...
+      - name: Resource lifecycle stress
+        run: go test ./sqliteffi -run TestResourceLifecycleStress -count=10
