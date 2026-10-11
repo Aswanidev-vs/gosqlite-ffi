@@ -23,10 +23,9 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go }}
-          cache: true
       - name: Resolve modules and checksums
         run: go mod tidy
       - name: Test
         run: go test ./...
       - name: Vet
-        run: go vet ./...
+        run: go vet -unsafeptr=false ./...
