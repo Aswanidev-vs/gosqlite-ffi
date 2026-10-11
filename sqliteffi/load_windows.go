@@ -39,7 +39,7 @@ func registerLibVersion(l *Library, handle uintptr) error {
 
 	purego.RegisterFunc(&l.version, uintptr(versionSymbol))
 	purego.RegisterFunc(&l.versionNumber, uintptr(versionNumberSymbol))
-	return nil
+	return registerDatabaseAPI(l, func(name string) (uintptr, error) { p, err := syscall.GetProcAddress(syscall.Handle(handle), name); return uintptr(p), err })
 }
 
 func cString(ptr uintptr) string {
