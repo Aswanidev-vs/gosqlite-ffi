@@ -114,3 +114,46 @@ func TestBindEmptyBlobIsDistinctFromNull(t *testing.T) {
 		t.Fatalf("nil []byte bindNull calls = %d, want 1", nullBinds)
 	}
 }
+
+func TestValidateScanDestinationsRejectsNilValues(t *testing.T) {
+	type unsupported struct{ value int }
+
+	var nilInt *int64
+	var nilString *string
+	var nilBytes *[]byte
+	var nilAny *any
+	var nilUnsupported *unsupported
+
+	tests := []struct {
+		name string
+		dest any
+	}{
+		{name: "nil interface", dest: nil},
+		{name: "nil int64 pointer", dest: nilInt},
+		{name: "nil string pointer", dest: nilString},
+		{name: "nil byte-slice pointer", dest: nilBytes},
+		{name: "nil any pointer", dest: nilAny},
+		{name: "nil unsupported pointer", dest: nilUnsupported},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateScanDestinations([]any{tt.dest})
+			if err == nil {
+				t.Fatal("expected nil destination to be rejected")
+			}
+		})
+	}
+}
+
+func TestScanRejectsNilDestinationBeforeAccessingRows(t *testing.T) {
+	var rows *Rows
+	var destination *int64
+
+	err := rows.Scan(destination)
+	if err == nil {
+		t.Fatal("expected nil destination error")
+	}
+	if !strings.Contains(err.Error(), "destination 0") {
+		t.Fatalf("error = %q, want destination index", err)
+	}
+}

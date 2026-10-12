@@ -3,6 +3,7 @@ package sqliteffi
 import (
  "errors"
  "fmt"
+ "reflect"
  "unsafe"
 )
 
@@ -77,8 +78,26 @@ func (r *Rows) Values() ([]any,error) {
  return out,nil
 }
 
+// validateScanDestinations rejects nil interfaces and typed nil pointers before
+// Scan reads row values or attempts to assign into a destination.
+func validateScanDestinations(dest []any) error {
+ for i, d := range dest {
+  if d == nil {
+   return fmt.Errorf("sqliteffi: Scan destination %d is nil", i)
+  }
+  value := reflect.ValueOf(d)
+  if value.Kind() == reflect.Ptr && value.IsNil() {
+   return fmt.Errorf("sqliteffi: Scan destination %d (%T) is a nil pointer", i, d)
+  }
+ }
+ return nil
+}
+
 // Scan copies the current row into pointers to supported Go values.
 func (r *Rows) Scan(dest ...any) error {
+ if err := validateScanDestinations(dest); err != nil {
+  return err
+ }
  values,err:=r.Values(); if err!=nil { return err }
  if len(dest)!=len(values) { return fmt.Errorf("sqliteffi: Scan has %d destinations for %d columns",len(dest),len(values)) }
  for i,v:=range values {
