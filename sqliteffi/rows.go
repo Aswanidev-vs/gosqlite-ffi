@@ -78,7 +78,7 @@ func (r *Rows) Values() ([]any,error) {
  return out,nil
 }
 
-// validateScanDestinations rejects nil interfaces and typed nil pointers before Scan accesses row state.
+// validateScanDestinations rejects nil interfaces and typed nil pointers.
 func validateScanDestinations(dest []any) error {
  for i, d := range dest {
   if d == nil {
