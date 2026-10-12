@@ -178,6 +178,7 @@ The native call layer uses [`github.com/ebitengine/purego`](https://github.com/e
 - [ ] Extended SQLite errors and value-binding edge cases
 - [ ] Backup/restore and operational configuration APIs
 - [ ] Fuzzing and expanded failure-path tests
+- [ ] Reduce `database/sql` row-scan allocations by avoiding intermediate row slices and redundant BLOB copies; verify with the matched-runtime benchmark workflow
 - [ ] Refreshed matched-version comparative performance baseline
 - [ ] Verified OS/architecture matrix and versioned release artifacts
 
