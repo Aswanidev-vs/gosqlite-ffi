@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"unsafe"
 )
 
 func TestLoadRejectsBlankPath(t *testing.T) {
@@ -70,5 +71,46 @@ func TestCloseIdempotent(t *testing.T) {
 	}
 	if _, err := lib.Version(); !errors.Is(err, ErrClosed) {
 		t.Fatalf("Version error = %v, want ErrClosed", err)
+	}
+}
+
+func TestBindEmptyBlobIsDistinctFromNull(t *testing.T) {
+	var gotBlobPointer unsafe.Pointer
+	var gotBlobLength int32
+	nullBinds := 0
+	lib := &Library{}
+	lib.api.bindNull = func(unsafe.Pointer, int32) int32 {
+		nullBinds++
+		return sqliteOK
+	}
+	lib.api.bindBlob = func(_ unsafe.Pointer, _ int32, p unsafe.Pointer, n int32, destructor uintptr) int32 {
+		gotBlobPointer = p
+		gotBlobLength = n
+		if destructor != sqliteTransient {
+			t.Errorf("blob destructor = %v, want SQLITE_TRANSIENT", destructor)
+		}
+		return sqliteOK
+	}
+	db := &DB{lib: lib}
+	var stmt int
+
+	if err := db.bind(unsafe.Pointer(&stmt), 1, []byte{}); err != nil {
+		t.Fatalf("bind empty blob: %v", err)
+	}
+	if gotBlobPointer == nil {
+		t.Fatal("empty non-nil []byte was bound with a nil pointer, which SQLite interprets as SQL NULL")
+	}
+	if gotBlobLength != 0 {
+		t.Fatalf("empty blob length = %d, want 0", gotBlobLength)
+	}
+	if nullBinds != 0 {
+		t.Fatalf("empty blob invoked bindNull %d times", nullBinds)
+	}
+
+	if err := db.bind(unsafe.Pointer(&stmt), 1, []byte(nil)); err != nil {
+		t.Fatalf("bind nil byte slice: %v", err)
+	}
+	if nullBinds != 1 {
+		t.Fatalf("nil []byte bindNull calls = %d, want 1", nullBinds)
 	}
 }

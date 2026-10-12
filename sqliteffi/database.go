@@ -149,7 +149,18 @@ func (db *DB) bind(stmt unsafe.Pointer, index int32, value any) error {
  case string:
   b:=append([]byte(v),0); rc=a.bindText(stmt,index,&b[0],int32(len(b)-1),sqliteTransient); runtime.KeepAlive(b)
  case []byte:
-  if v==nil { rc=a.bindNull(stmt,index) } else if len(v)==0 { rc=a.bindBlob(stmt,index,nil,0,sqliteTransient) } else { rc=a.bindBlob(stmt,index,unsafe.Pointer(&v[0]),int32(len(v)),sqliteTransient); runtime.KeepAlive(v) }
+  if v==nil {
+   rc=a.bindNull(stmt,index)
+  } else if len(v)==0 {
+   // SQLite treats a nil data pointer as SQL NULL even when the length is zero.
+   // Pass a non-nil pointer so a non-nil empty slice remains an empty BLOB.
+   empty := byte(0)
+   rc=a.bindBlob(stmt,index,unsafe.Pointer(&empty),0,sqliteTransient)
+   runtime.KeepAlive(&empty)
+  } else {
+   rc=a.bindBlob(stmt,index,unsafe.Pointer(&v[0]),int32(len(v)),sqliteTransient)
+   runtime.KeepAlive(v)
+  }
  default: return fmt.Errorf("unsupported parameter type %T",value)
  }
  if rc!=sqliteOK { return db.error(rc) }; return nil
