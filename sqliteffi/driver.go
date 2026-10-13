@@ -86,19 +86,7 @@ func (r *driverRows) Next(dest []driver.Value) error {
 		if err := r.rows.Err(); err != nil { return err }
 		return io.EOF
 	}
-	values, err := r.rows.Values(); if err != nil { return err }
-	if len(dest) != len(values) { return fmt.Errorf("sqliteffi: driver row has %d columns, destination has %d", len(values), len(dest)) }
-	for i, v := range values {
-		switch x := v.(type) {
-		case nil: dest[i] = nil
-		case int64: dest[i] = x
-		case float64: dest[i] = x
-		case string: dest[i] = x
-		case []byte: dest[i] = append([]byte(nil), x...)
-		default: return fmt.Errorf("sqliteffi: unsupported driver value %T", v)
-		}
-	}
-	return nil
+	return r.rows.driverValues(dest)
 }
 
 var _ driver.Driver = Driver{}
