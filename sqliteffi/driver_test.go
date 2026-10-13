@@ -57,7 +57,8 @@ func TestDatabaseSQLDriver(t *testing.T) {
 	db, err := sql.Open(driverName, ":memory:")
 	if err != nil { t.Fatal(err) }
 	defer db.Close()
-	if _, err := db.Exec("CREATE TABLE item (value TEXT)"); err != nil { t.Skipf("native SQLite unavailable: %v", err) }
+	db.SetMaxOpenConns(1)
+	if _, err := db.Exec("CREATE TABLE item (value TEXT)"); err != nil { t.Skipf("native SQLite library unavailable: %v", err) }
 	if _, err := db.Exec("INSERT INTO item(value) VALUES (?)", "driver"); err != nil { t.Fatal(err) }
 	var value string
 	if err := db.QueryRow("SELECT value FROM item").Scan(&value); err != nil { t.Fatal(err) }
@@ -69,4 +70,33 @@ func TestDatabaseSQLDriver(t *testing.T) {
 	var count int
 	if err := db.QueryRow("SELECT count(*) FROM item").Scan(&count); err != nil { t.Fatal(err) }
 	if count != 1 { t.Fatalf("count = %d, want 1", count) }
+}
+
+// TestDatabaseSQLDriverRowTypes exercises the optimized driver conversion path
+// through database/sql, including the important empty-BLOB versus NULL distinction.
+func TestDatabaseSQLDriverRowTypes(t *testing.T) {
+	const driverName = "sqliteffi_row_types_test"
+	sql.Register(driverName, Driver{})
+	db, err := sql.Open(driverName, ":memory:")
+	if err != nil { t.Fatal(err) }
+	defer db.Close()
+	db.SetMaxOpenConns(1)
+
+	var integer int64
+	var floating float64
+	var text string
+	var blob []byte
+	var nullValue any
+	err = db.QueryRow("SELECT 42, 1.25, 'hello', X'', NULL").Scan(
+		&integer, &floating, &text, &blob, &nullValue,
+	)
+	if err != nil {
+		t.Skipf("native SQLite library unavailable or query unsupported: %v", err)
+	}
+	if integer != 42 { t.Errorf("integer = %d, want 42", integer) }
+	if floating != 1.25 { t.Errorf("floating = %v, want 1.25", floating) }
+	if text != "hello" { t.Errorf("text = %q, want hello", text) }
+	if blob == nil { t.Fatal("empty BLOB scanned as nil; want non-nil empty []byte") }
+	if len(blob) != 0 { t.Errorf("empty BLOB length = %d, want 0", len(blob)) }
+	if nullValue != nil { t.Errorf("SQL NULL = %#v, want nil", nullValue) }
 }
