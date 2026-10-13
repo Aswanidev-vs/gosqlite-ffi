@@ -72,8 +72,8 @@ func TestDatabaseSQLDriver(t *testing.T) {
 	if count != 1 { t.Fatalf("count = %d, want 1", count) }
 }
 
-// TestDatabaseSQLDriverRowTypes exercises the optimized driver conversion path
-// through database/sql, including the important empty-BLOB versus NULL distinction.
+// TestDatabaseSQLDriverRowTypes covers the optimized conversion path, including
+// the distinction between an empty BLOB and SQL NULL.
 func TestDatabaseSQLDriverRowTypes(t *testing.T) {
 	const driverName = "sqliteffi_row_types_test"
 	sql.Register(driverName, Driver{})
