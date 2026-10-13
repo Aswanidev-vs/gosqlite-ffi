@@ -81,6 +81,9 @@ func TestDatabaseSQLDriverRowTypes(t *testing.T) {
 	if err != nil { t.Fatal(err) }
 	defer db.Close()
 	db.SetMaxOpenConns(1)
+	if _, err := db.Exec("CREATE TABLE row_types (marker INTEGER)"); err != nil {
+		t.Skipf("native SQLite library unavailable: %v", err)
+	}
 
 	var integer int64
 	var floating float64
@@ -90,9 +93,7 @@ func TestDatabaseSQLDriverRowTypes(t *testing.T) {
 	err = db.QueryRow("SELECT 42, 1.25, 'hello', X'', NULL").Scan(
 		&integer, &floating, &text, &blob, &nullValue,
 	)
-	if err != nil {
-		t.Skipf("native SQLite library unavailable or query unsupported: %v", err)
-	}
+	if err != nil { t.Fatalf("scan row values: %v", err) }
 	if integer != 42 { t.Errorf("integer = %d, want 42", integer) }
 	if floating != 1.25 { t.Errorf("floating = %v, want 1.25", floating) }
 	if text != "hello" { t.Errorf("text = %q, want hello", text) }
