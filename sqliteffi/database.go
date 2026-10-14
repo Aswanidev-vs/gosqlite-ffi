@@ -100,7 +100,7 @@ func (db *DB) checkOpen() error {
  if db == nil || db.closed || db.handle == nil { return ErrDBClosed }
  return nil
 }
-func (db *DB) error(rc int32) error { return errors.New(db.lib.dbError(db.handle, rc)) }
+func (db *DB) error(rc int32) error {\n\tmessage := "unknown SQLite error"\n\tif db != nil && db.lib != nil {\n\t\tif p := db.lib.api.errmsg(db.handle); p != 0 { message = cString(p) }\n\t}\n\tresultCode := int(rc)\n\treturn &SQLiteError{Code: SQLiteCode(resultCode & 0xff), ResultCode: resultCode, Message: message}\n}
 func (l *Library) dbError(handle unsafe.Pointer, rc int32) string {
  msg := "unknown SQLite error"
  if l.api.errmsg != nil { if p:=l.api.errmsg(handle); p!=0 { msg=cString(p) } }
