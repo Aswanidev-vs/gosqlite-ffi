@@ -102,8 +102,10 @@ func (db *DB) checkOpen() error {
 }
 func (db *DB) error(rc int32) error {
 	message := "unknown SQLite error"
-	if db != nil && db.lib != nil {
-		if p := db.lib.api.errmsg(db.handle); p != 0 { message = cString(p) }
+	if db != nil && db.lib != nil && db.lib.api.errmsg != nil {
+		if p := db.lib.api.errmsg(db.handle); p != 0 {
+			message = cString(p)
+		}
 	}
 	resultCode := int(rc)
 	return &SQLiteError{Code: SQLiteCode(resultCode & 0xff), ResultCode: resultCode, Message: message}
