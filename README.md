@@ -91,6 +91,22 @@ if _, err := tx.Exec("INSERT INTO users(name) VALUES (?)", "Grace"); err != nil 
 if err := tx.Commit(); err != nil { log.Fatal(err) }
 ```
 
+### Typed SQLite errors
+
+SQLite operation failures expose a `*sqliteffi.SQLiteError` with the primary result code, the raw result code returned by SQLite, and SQLite's diagnostic message. Use `errors.As` to inspect details and `errors.Is` to match common primary codes:
+
+```go
+var sqliteErr *sqliteffi.SQLiteError
+if errors.As(err, &sqliteErr) {
+    fmt.Printf("SQLite code %d (raw %d): %s\\n", sqliteErr.Code, sqliteErr.ResultCode, sqliteErr.Message)
+}
+if errors.Is(err, sqliteffi.CodeConstraint) {
+    // Handle a constraint violation.
+}
+```
+
+Import the standard-library `errors` package for this pattern. The raw result code preserves the code returned by the failing API call; this does not yet enable or query SQLite's extended-error-code mode.
+
 ### `database/sql` driver
 
 ```go
