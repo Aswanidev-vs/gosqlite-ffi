@@ -4,18 +4,18 @@ This folder compares GoFFI SQLite with mattn/go-sqlite3, modernc.org/sqlite, and
 
 ### Measured results
 
-**Measured on 2026-10-11 in GitHub Actions** on Linux/amd64 using an AMD EPYC 7763 64-Core Processor. Each value is the median of five benchmark repetitions and includes `ns/op`, `B/op`, and `allocs/op`. The three-run concurrent stress test passed for all four drivers. [Raw benchmark artifact and workflow](https://github.com/Aswanidev-vs/gosqlite-ffi/actions/runs/38136727123).
+**Matched-runtime results measured on 2026-10-15** by GitHub Actions on Linux/amd64 using an Intel Xeon Platinum 8370C CPU @ 2.80 GHz. The workflow verified SQLite **3.53.4 for all four drivers**, ran the three-run concurrent stress tests successfully, and completed five benchmark repetitions per workload. Values below are medians and include time, bytes allocated, and allocation count. [Workflow and raw artifact](https://github.com/Aswanidev-vs/gosqlite-ffi/actions/runs/38676334220).
 
 | Workload | GoFFI | mattn | modernc | ncruces |
 |---|---:|---:|---:|---:|
-| Open / close | 689.7 ns/op; 528 B/op; 7 allocs/op | 630.3 ns/op; 528 B/op; 7 allocs/op | 621.0 ns/op; 528 B/op; 7 allocs/op | 753.3 ns/op; 592 B/op; 7 allocs/op |
-| CRUD round trip | 1,319,820 ns/op; 2,200 B/op; 88 allocs/op | 1,361,630 ns/op; 1,111 B/op; 35 allocs/op | 1,571,157 ns/op; 847 B/op; 31 allocs/op | 1,337,785 ns/op; 4,424 B/op; 86 allocs/op |
-| Reused prepared inserts | 621,937 ns/op; 487 B/op; 25 allocs/op | 673,814 ns/op; 159 B/op; 7 allocs/op | 752,524 ns/op; 159 B/op; 8 allocs/op | 638,038 ns/op; 1,847 B/op; 32 allocs/op |
-| 100-row transaction batch | 1,326,782 ns/op; 61,682 B/op; 2,619 allocs/op | 1,088,848 ns/op; 27,591 B/op; 1,101 allocs/op | 1,295,299 ns/op; 18,690 B/op; 993 allocs/op | 1,353,173 ns/op; 30,810 B/op; 1,017 allocs/op |
-| Scan 1,000 rows | 3,016,697 ns/op; 412,089 B/op; 22,521 allocs/op | 490,171 ns/op; 37,768 B/op; 2,764 allocs/op | 442,472 ns/op; 37,680 B/op; 2,762 allocs/op | 475,526 ns/op; 16,008 B/op; 1,019 allocs/op |
-| Parallel WAL read/write | 186,242 ns/op; 1,395 B/op; 52 allocs/op | 88,551 ns/op; 1,270 B/op; 30 allocs/op | 213,668 ns/op; 1,137 B/op; 28 allocs/op | 77,446 ns/op; 788 B/op; 17 allocs/op |
+| Open / close | 805.0 ns/op; 528 B/op; 7 allocs/op | 835.6 ns/op; 528 B/op; 7 allocs/op | 844.8 ns/op; 528 B/op; 7 allocs/op | 864.0 ns/op; 592 B/op; 7 allocs/op |
+| CRUD round trip | 1,193,900 ns/op; 2,168 B/op; 86 allocs/op | 1,059,443 ns/op; 1,111 B/op; 35 allocs/op | 1,176,639 ns/op; 847 B/op; 31 allocs/op | 1,009,451 ns/op; 4,424 B/op; 86 allocs/op |
+| Reused prepared inserts | 578,206 ns/op; 487 B/op; 25 allocs/op | 515,092 ns/op; 159 B/op; 7 allocs/op | 568,503 ns/op; 159 B/op; 8 allocs/op | 485,467 ns/op; 1,848 B/op; 32 allocs/op |
+| 100-row transaction batch | 1,410,152 ns/op; 61,676 B/op; 2,618 allocs/op | 899,476 ns/op; 27,614 B/op; 1,103 allocs/op | 1,067,771 ns/op; 18,712 B/op; 995 allocs/op | 1,165,152 ns/op; 30,824 B/op; 1,019 allocs/op |
+| Scan 1,000 rows | 3,005,918 ns/op; 358,112 B/op; 19,776 allocs/op | 462,749 ns/op; 37,768 B/op; 2,764 allocs/op | 556,451 ns/op; 37,680 B/op; 2,762 allocs/op | 466,713 ns/op; 16,008 B/op; 1,019 allocs/op |
+| Parallel WAL read/write | 166,361 ns/op; 1,381 B/op; 50 allocs/op | 49,405 ns/op; 1,257 B/op; 30 allocs/op | 146,302 ns/op; 1,137 B/op; 28 allocs/op | 67,584 ns/op; 800 B/op; 17 allocs/op |
 
-**Comparability caveat:** GoFFI reported SQLite 3.45.1; mattn, modernc, and ncruces reported SQLite 3.53.4. These are measured results from the same runner and harness, but the SQLite runtime versions differ. Treat this as an initial baseline, not a definitive driver ranking. A matched-version run is needed for a stricter comparison.
+**Interpretation:** These are workload-specific microbenchmarks, not a universal ranking. GoFFI has competitive open/close results in this run, while other drivers are faster and/or allocate less in several query, insert, transaction, scan, and parallel workloads. In particular, the GoFFI 1,000-row scan now reports 19,776 allocations and 358,112 B/op, down from the historical 22,521 allocations and about 412 KB/op; the old run used a different CPU and mismatched SQLite versions, so treat that as directional context rather than a controlled before/after comparison. Review the raw artifact before drawing conclusions.
 
 ## Run locally
 
