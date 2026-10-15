@@ -147,22 +147,22 @@ go run .</code></pre></div>
   <div class="section-heading">
     <p class="eyebrow">Performance &amp; reliability</p>
     <h2>Comparative benchmarks</h2>
-    <p>GoFFI SQLite is being compared with mattn/go-sqlite3, modernc.org/sqlite, and ncruces/go-sqlite3 using shared database/sql workloads.</p>
+    <p>GoFFI SQLite is compared with mattn/go-sqlite3, modernc.org/sqlite, and ncruces/go-sqlite3 using shared database/sql workloads.</p>
   </div>
-  <p><strong>Initial measured results.</strong> Linux/amd64, AMD EPYC 7763 64-Core Processor; median of five repetitions. Each cell shows ns/op, B/op, and allocs/op.</p>
+  <p><strong>Matched-runtime results measured 2026-10-15.</strong> Linux/amd64, Intel Xeon Platinum 8370C CPU @ 2.80 GHz; median of five repetitions. The workflow verified SQLite 3.53.4 for all four drivers. Each cell shows ns/op, B/op, and allocs/op.</p>
   <div class="table-wrap"><table>
     <thead><tr><th>Workload</th><th>GoFFI</th><th>mattn</th><th>modernc</th><th>ncruces</th></tr></thead>
     <tbody>
-      <tr><td>Open / close</td><td>689.7 ns/op<br>528 B/op<br>7 allocs/op</td><td>630.3 ns/op<br>528 B/op<br>7 allocs/op</td><td>621.0 ns/op<br>528 B/op<br>7 allocs/op</td><td>753.3 ns/op<br>592 B/op<br>7 allocs/op</td></tr>
-      <tr><td>CRUD round trip</td><td>1,319,820 ns/op<br>2,200 B/op<br>88 allocs/op</td><td>1,361,630 ns/op<br>1,111 B/op<br>35 allocs/op</td><td>1,571,157 ns/op<br>847 B/op<br>31 allocs/op</td><td>1,337,785 ns/op<br>4,424 B/op<br>86 allocs/op</td></tr>
-      <tr><td>Reused prepared inserts</td><td>621,937 ns/op<br>487 B/op<br>25 allocs/op</td><td>673,814 ns/op<br>159 B/op<br>7 allocs/op</td><td>752,524 ns/op<br>159 B/op<br>8 allocs/op</td><td>638,038 ns/op<br>1,847 B/op<br>32 allocs/op</td></tr>
-      <tr><td>100-row transaction batch</td><td>1,326,782 ns/op<br>61,682 B/op<br>2,619 allocs/op</td><td>1,088,848 ns/op<br>27,591 B/op<br>1,101 allocs/op</td><td>1,295,299 ns/op<br>18,690 B/op<br>993 allocs/op</td><td>1,353,173 ns/op<br>30,810 B/op<br>1,017 allocs/op</td></tr>
-      <tr><td>Scan 1,000 rows</td><td>3,016,697 ns/op<br>412,089 B/op<br>22,521 allocs/op</td><td>490,171 ns/op<br>37,768 B/op<br>2,764 allocs/op</td><td>442,472 ns/op<br>37,680 B/op<br>2,762 allocs/op</td><td>475,526 ns/op<br>16,008 B/op<br>1,019 allocs/op</td></tr>
-      <tr><td>Parallel WAL read/write</td><td>186,242 ns/op<br>1,395 B/op<br>52 allocs/op</td><td>88,551 ns/op<br>1,270 B/op<br>30 allocs/op</td><td>213,668 ns/op<br>1,137 B/op<br>28 allocs/op</td><td>77,446 ns/op<br>788 B/op<br>17 allocs/op</td></tr>
+      <tr><td>Open / close</td><td>805.0 ns/op<br>528 B/op<br>7 allocs/op</td><td>835.6 ns/op<br>528 B/op<br>7 allocs/op</td><td>844.8 ns/op<br>528 B/op<br>7 allocs/op</td><td>864.0 ns/op<br>592 B/op<br>7 allocs/op</td></tr>
+      <tr><td>CRUD round trip</td><td>1,193,900 ns/op<br>2,168 B/op<br>86 allocs/op</td><td>1,059,443 ns/op<br>1,111 B/op<br>35 allocs/op</td><td>1,176,639 ns/op<br>847 B/op<br>31 allocs/op</td><td>1,009,451 ns/op<br>4,424 B/op<br>86 allocs/op</td></tr>
+      <tr><td>Reused prepared inserts</td><td>578,206 ns/op<br>487 B/op<br>25 allocs/op</td><td>515,092 ns/op<br>159 B/op<br>7 allocs/op</td><td>568,503 ns/op<br>159 B/op<br>8 allocs/op</td><td>485,467 ns/op<br>1,848 B/op<br>32 allocs/op</td></tr>
+      <tr><td>100-row transaction batch</td><td>1,410,152 ns/op<br>61,676 B/op<br>2,618 allocs/op</td><td>899,476 ns/op<br>27,614 B/op<br>1,103 allocs/op</td><td>1,067,771 ns/op<br>18,712 B/op<br>995 allocs/op</td><td>1,165,152 ns/op<br>30,824 B/op<br>1,019 allocs/op</td></tr>
+      <tr><td>Scan 1,000 rows</td><td>3,005,918 ns/op<br>358,112 B/op<br>19,776 allocs/op</td><td>462,749 ns/op<br>37,768 B/op<br>2,764 allocs/op</td><td>556,451 ns/op<br>37,680 B/op<br>2,762 allocs/op</td><td>466,713 ns/op<br>16,008 B/op<br>1,019 allocs/op</td></tr>
+      <tr><td>Parallel WAL read/write</td><td>166,361 ns/op<br>1,381 B/op<br>50 allocs/op</td><td>49,405 ns/op<br>1,257 B/op<br>30 allocs/op</td><td>146,302 ns/op<br>1,137 B/op<br>28 allocs/op</td><td>67,584 ns/op<br>800 B/op<br>17 allocs/op</td></tr>
       <tr><td>Concurrent stress test (3 runs)</td><td>Passed</td><td>Passed</td><td>Passed</td><td>Passed</td></tr>
     </tbody>
   </table></div>
-  <p><strong>Comparability caveat:</strong> GoFFI reported SQLite 3.45.1; mattn, modernc, and ncruces reported SQLite 3.53.4. Treat these as initial measurements, not a definitive ranking. A matched-version run is needed for a stricter comparison. <a href="https://github.com/Aswanidev-vs/gosqlite-ffi/actions/runs/38136727123">View raw benchmark artifact and workflow</a>.</p>
+  <p><strong>Interpretation:</strong> These are workload-specific microbenchmarks, not a universal ranking. GoFFI is competitive on open/close in this run, but other drivers are faster and/or allocate less in several query and write workloads. Its 1,000-row scan reports 19,776 allocations and 358,112 B/op; the earlier unmatched run reported 22,521 allocations and about 412 KB/op, but different runner and SQLite versions mean this is not a controlled before/after comparison. <a href="https://github.com/Aswanidev-vs/gosqlite-ffi/actions/runs/38676334220">View matched benchmark workflow and raw artifact</a>.</p>
   <p>Workloads include CRUD, prepared statements, transaction batches, scans, parallel reads/writes, and an eight-worker stress test verifying 800 inserts. See the <a href="https://github.com/Aswanidev-vs/gosqlite-ffi/tree/main/benchmarks">benchmark harness</a> and <a href="https://github.com/Aswanidev-vs/gosqlite-ffi/actions/workflows/benchmarks.yml">CI workflow</a>.</p>
 
 </section>
