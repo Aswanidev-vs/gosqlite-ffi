@@ -103,6 +103,8 @@ func TestDatabaseSQLDriverRowTypes(t *testing.T) {
 	if nullValue != nil { t.Errorf("SQL NULL = %#v, want nil", nullValue) }
 }
 
+// TestDatabaseSQLPingContext verifies that ping succeeds on a healthy connection
+// and rejects a context canceled before the call.
 func TestDatabaseSQLPingContext(t *testing.T) {
 	const driverName = "sqliteffi_ping_test"
 	sql.Register(driverName, Driver{})
