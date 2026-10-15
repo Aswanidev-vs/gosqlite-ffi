@@ -33,6 +33,25 @@ func (c *driverConn) Close() error {
 	c.closed = true
 	return c.db.Close()
 }
+
+// Ping implements driver.Pinger. It verifies that the connection can execute a
+// trivial statement. Context is checked before and after the synchronous call;
+// SQLite interruption for cancellation during execution is not implemented.
+func (c *driverConn) Ping(ctx context.Context) error {
+	if err := ctx.Err(); err != nil { return err }
+	if c.closed || c.db == nil { return ErrDBClosed }
+	if _, err := c.db.Exec("SELECT 1"); err != nil { return err }
+	return ctx.Err()
+}
+
+// IsValid implements driver.Validator so database/sql can discard a closed
+// or otherwise unusable connection rather than returning it to the pool.
+func (c *driverConn) IsValid() bool {
+	if c == nil || c.closed || c.db == nil { return false }
+	c.db.mu.Lock()
+	defer c.db.mu.Unlock()
+	return c.db.checkOpen() == nil
+}
 func (c *driverConn) Begin() (driver.Tx, error) {
 	if c.closed { return nil, ErrDBClosed }
 	return c.db.Begin()
@@ -92,6 +111,8 @@ func (r *driverRows) Next(dest []driver.Value) error {
 var _ driver.Driver = Driver{}
 var _ driver.Conn = (*driverConn)(nil)
 var _ driver.ConnBeginTx = (*driverConn)(nil)
+var _ driver.Pinger = (*driverConn)(nil)
+var _ driver.Validator = (*driverConn)(nil)
 var _ driver.ExecerContext = (*driverConn)(nil)
 var _ driver.QueryerContext = (*driverConn)(nil)
 var _ driver.Stmt = (*driverStmt)(nil)

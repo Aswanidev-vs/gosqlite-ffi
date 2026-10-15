@@ -118,6 +118,8 @@ defer sqldb.Close()
 
 Import `database/sql` to use this example. The DSN is the SQLite file path (or `:memory:`).
 
+The driver also implements `driver.Pinger` and `driver.Validator`. `sql.DB.PingContext` verifies the connection by executing `SELECT 1`; a context canceled before the call is rejected. Because native SQLite calls are synchronous in this version, cancellation does not interrupt a query already executing. The validator lets `database/sql` avoid reusing a closed connection.
+
 ## Benchmarks
 
 Run the insert and single-row query benchmarks against the native SQLite library installed on your machine:

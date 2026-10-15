@@ -1,6 +1,7 @@
 package sqliteffi
 
 import (
+	"context"
 	"database/sql"
 	"path/filepath"
 	"testing"
@@ -100,4 +101,23 @@ func TestDatabaseSQLDriverRowTypes(t *testing.T) {
 	if blob == nil { t.Fatal("empty BLOB scanned as nil; want non-nil empty []byte") }
 	if len(blob) != 0 { t.Errorf("empty BLOB length = %d, want 0", len(blob)) }
 	if nullValue != nil { t.Errorf("SQL NULL = %#v, want nil", nullValue) }
+}
+
+func TestDatabaseSQLPingContext(t *testing.T) {
+	const driverName = "sqliteffi_ping_test"
+	sql.Register(driverName, Driver{})
+	db, err := sql.Open(driverName, ":memory:")
+	if err != nil { t.Fatal(err) }
+	defer db.Close()
+	db.SetMaxOpenConns(1)
+
+	if err := db.PingContext(context.Background()); err != nil {
+		t.Fatalf("PingContext(background): %v", err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if err := db.PingContext(ctx); err == nil {
+		t.Fatal("PingContext(canceled context) returned nil, want context error")
+	}
 }
